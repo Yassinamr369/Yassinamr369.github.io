@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Euler's Method | Yassin Amr Abdelaziz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@300;400;700&family=Syncopate:wght@700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Ultra-Premium Dark Theme */
+    --bg-base: #030303;
+    --bg-panel: rgba(10, 10, 10, 0.7);
+    --border: #1f1f1f;
+    --text-main: #ffffff;
+    --text-muted: #737373;
+    
+    /* Accents */
+    --accent-glow: rgba(255, 255, 255, 0.1);
+    --accent-blue: #3b82f6;
+    --accent-purple: #8b5cf6;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+
+    --font-sans: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Syncopate', sans-serif;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+
+  /* ─── SCROLLBAR ───────────────────────── */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-base); }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+  /* ─── HERO SECTION ─────────────────────── */
+  #hero {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  #hero-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: auto; /* allows mouse interaction */
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 100px;
+    background: var(--bg-panel);
+    backdrop-filter: blur(10px);
+    margin-bottom: 30px;
+    animation: fadeUp 1s ease forwards 0.2s;
+    opacity: 0;
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 8vw, 6rem);
+    line-height: 1.1;
+    letter-spacing: -2px;
+    background: linear-gradient(180deg, #ffffff 0%, #737373 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+    animation: fadeUp 1s ease forwards 0.4s;
+    opacity: 0;
+  }
+
+  .hero-subtitle {
+    font-family: var(--font-mono);
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 60px;
+    animation: fadeUp 1s ease forwards 0.6s;
+    opacity: 0;
+  }
+
+  .author-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    animation: fadeUp 1s ease forwards 0.8s;
+    opacity: 0;
+  }
+
+  .author-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+
+  .author-id {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    letter-spacing: 0.2em;
+  }
+
+  .scroll-down {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: color 0.3s;
+    animation: fadeUp 1s ease forwards 1.2s;
+    opacity: 0;
+  }
+
+  .scroll-down:hover {
+    color: var(--text-main);
+  }
+
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: var(--text-muted);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scroll-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: var(--text-main);
+    animation: scrollDrop 2s infinite ease-in-out;
+  }
+
+  @keyframes fadeUp {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scrollDrop {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(200%); }
+  }
+
+  /* ─── APP SECTION ──────────────────────── */
+  #app-section {
+    min-height: 100vh;
+    padding: 100px 5%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(180deg, var(--bg-base) 0%, #080808 100%);
+  }
+
+  .app-container {
+    width: 100%;
+    max-width: 1200px;
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 30px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    backdrop-filter: blur(20px);
+  }
+
+  /* ─── CONTROLS ─────────────────────── */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    letter-spacing: -1px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 15px;
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .field.full { grid-column: 1 / -1; }
+
+  .field label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .field input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+
+  .field input:focus {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  button {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-primary {
+    grid-column: 1 / -1;
+    background: var(--text-main);
+    color: var(--bg-base);
+  }
+
+  .btn-primary:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(255,255,255,0.1);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-main);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--text-muted);
+    background: rgba(255,255,255,0.05);
+  }
+
+  .full-width {
+    grid-column: 1 / -1;
+  }
+
+  /* Custom Slider */
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--text-main);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    transition: transform 0.2s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.5); }
+
+  #error-msg {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--accent-red);
+    min-height: 15px;
+  }
+
+  /* ─── CANVAS STAGE ─────────────────────── */
+  .stage {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  canvas#app-canvas {
+    width: 100%;
+    flex: 1;
+    display: block;
+  }
+
+  .status-bar {
+    height: 40px;
+    background: rgba(20, 20, 20, 0.9);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .status-item span { color: var(--text-main); font-weight: 700; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .app-container { grid-template-columns: 1fr; }
+    #app-section { padding: 40px 5%; }
+  }
+
+  @media (max-width: 500px) {
+    .field-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  
+  <div class="hero-content">
+    <div class="badge">Petroleum Science student | Personal Project</div>
+    <h1 class="hero-title">EULER'S METHOD</h1>
+    <h2 class="hero-subtitle">Interactive Approximation Engine</h2>
+    
+    <div class="author-info">
+      <div class="author-name">Yassin Amr Abdelaziz</div>
+      <div class="author-id">ID: 2458053</div>
+    </div>
+  </div>
+
+  <a href="#app-section" class="scroll-down">
+    <span>Initialize</span>
+    <div class="scroll-line"></div>
+  </a>
+</section>
+
+<section id="app-section">
+  <div class="app-container">
+    
+    <aside class="sidebar">
+      <h3 class="section-title">Parameters</h3>
+      
+      <div class="field-grid">
+        <div class="field full">
+          <label>Derivative f(x, y)</label>
+          <input type="text" id="fxy" value="x + 2*y" />
+        </div>
+        <div class="field full">
+          <label>Exact Solution (Optional)</label>
+          <input type="text" id="ftrue" value="-0.5*x - 0.25 + 0.25*exp(2*x)" />
+        </div>
+        <div class="field"><label>Initial X (x₀)</label><input type="number" id="x0" value="0" step="0.1" /></div>
+        <div class="field"><label>Initial Y (y₀)</label><input type="number" id="y0" value="0" step="0.1" /></div>
+        <div class="field"><label>Step Size (h)</label><input type="number" id="h" value="0.25" step="0.05" /></div>
+        <div class="field"><label>Iterations (n)</label><input type="number" id="n" value="8" min="1" max="100" /></div>
+        <div class="field"><label>Plot X Max</label><input type="number" id="xend" value="2" step="0.5" /></div>
+        <div class="field"><label>Plot Y Range (±)</label><input type="number" id="yrange" value="5" step="0.5" /></div>
+        
+        <div class="field full" style="margin-top: 10px;">
+          <label>Animation Speed</label>
+          <input type="range" min="1" max="100" value="70" id="speed" />
+        </div>
+      </div>
+
+      <div id="error-msg"></div>
+
+      <div class="actions">
+        <button class="btn-primary" id="btnRun">Execute</button>
+        <button class="btn-secondary" id="btnStep">Step</button>
+        <button class="btn-secondary" id="btnReset">Clear</button>
+        <button class="btn-secondary full-width" id="btnDefault">Default</button>
+      </div>
+    </aside>
+
+    <main class="stage">
+      <canvas id="app-canvas"></canvas>
+      <div class="status-bar" id="statusBar">
+        <div class="status-item">System Standby</div>
+      </div>
+    </main>
+
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.0/math.min.js"></script>
+<script>
+  /* ══════════════ HERO INTERACTIVE NETWORK ══════════════ */
+  const heroCanvas = document.getElementById('hero-canvas');
+  const hctx = heroCanvas.getContext('2d');
+  
+  let particlesArray = [];
+  const numberOfParticles = 120;
+  
+  // Mouse interaction state
+  const mouse = { x: null, y: null, radius: 150 };
+
+  window.addEventListener('mousemove', (e) => {
+    mouse.x = e.x;
+    mouse.y = e.y;
+  });
+
+  function initHeroCanvas() {
+    heroCanvas.width = window.innerWidth;
+    heroCanvas.height = window.innerHeight;
+  }
+  
+  window.addEventListener('resize', initHeroCanvas);
+  initHeroCanvas();
+
+  class Particle {
+    constructor() {
+      this.x = Math.random() * heroCanvas.width;
+      this.y = Math.random() * heroCanvas.height;
+      this.size = Math.random() * 2 + 0.5;
+      this.baseX = this.x;
+      this.baseY = this.y;
+      this.density = (Math.random() * 20) + 1;
+      this.vx = (Math.random() - 0.5) * 0.5;
+      this.vy = (Math.random() - 0.5) * 0.5;
+    }
+    
+    draw() {
+      hctx.beginPath();
+      hctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      hctx.fillStyle = '#ffffff';
+      hctx.fill();
+    }
+    
+    update() {
+      // Float movement
+      this.x += this.vx;
+      this.y += this.vy;
+
+      if(this.x > heroCanvas.width || this.x < 0) this.vx = -this.vx;
+      if(this.y > heroCanvas.height || this.y < 0) this.vy = -this.vy;
+
+      // Mouse repulsion
+      if (mouse.x != null) {
+        let dx = mouse.x - this.x;
+        let dy = mouse.y - this.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        let forceDirectionX = dx / distance;
+        let forceDirectionY = dy / distance;
+        let maxDistance = mouse.radius;
+        let force = (maxDistance - distance) / maxDistance;
+        let directionX = forceDirectionX * force * this.density;
+        let directionY = forceDirectionY * force * this.density;
+
+        if (distance < mouse.radius) {
+          this.x -= directionX;
+          this.y -= directionY;
+        }
+      }
+    }
+  }
+
+  function connectParticles() {
+    for (let a = 0; a < particlesArray.length; a++) {
+      for (let b = a; b < particlesArray.length; b++) {
+        let dx = particlesArray[a].x - particlesArray[b].x;
+        let dy = particlesArray[a].y - particlesArray[b].y;
+        let distance = dx * dx + dy * dy;
+        
+        if (distance < 15000) {
+          let opacity = 1 - (distance / 15000);
+          hctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.2})`;
+          hctx.lineWidth = 1;
+          hctx.beginPath();
+          hctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+          hctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+          hctx.stroke();
+        }
+      }
+    }
+  }
+
+  function initParticles() {
+    particlesArray = [];
+    for (let i = 0; i < numberOfParticles; i++) {
+      particlesArray.push(new Particle());
+    }
+  }
+
+  function animateHero() {
+    hctx.clearRect(0, 0, heroCanvas.width, heroCanvas.height);
+    for (let i = 0; i < particlesArray.length; i++) {
+      particlesArray[i].update();
+      particlesArray[i].draw();
+    }
+    connectParticles();
+    requestAnimationFrame(animateHero);
+  }
+
+  initParticles();
+  animateHero();
+
+  /* ══════════════ EULER ENGINE ══════════════ */
+  const appCanvas = document.getElementById('app-canvas');
+  const ctx = appCanvas.getContext('2d');
+  
+  function resizeAppCanvas() {
+    const parent = appCanvas.parentElement;
+    appCanvas.width = parent.clientWidth;
+    appCanvas.height = parent.clientHeight - 40; 
+    if(points.length > 0) renderFrame(currentAnimProgress);
+  }
+  window.addEventListener('resize', resizeAppCanvas);
+
+  const Theme = {
+    grid: 'rgba(255, 255, 255, 0.05)',
+    axis: '#333333',
+    text: '#737373',
+    euler: '#ffffff',
+    tangent: '#555555',
+    trueSol: '#10b981'
+  };
+
+  let points = [];
+  let compiledF = null;
+  let compiledTrue = null;
+  let animId = null;
+  let currentAnimProgress = 0;
+  let targetProgress = 0;
+  
+  const Margins = { left: 50, right: 30, top: 40, bottom: 40 };
+
+  function getParams() {
+    return {
+      expr: document.getElementById('fxy').value,
+      trueExpr: document.getElementById('ftrue').value,
+      x0: parseFloat(document.getElementById('x0').value),
+      y0: parseFloat(document.getElementById('y0').value),
+      h: parseFloat(document.getElementById('h').value),
+      n: parseInt(document.getElementById('n').value),
+      xend: parseFloat(document.getElementById('xend').value),
+      yrange: parseFloat(document.getElementById('yrange').value),
+    };
+  }
+
+  function mapToCanvas(x, y, p) {
+    const w = appCanvas.width;
+    const h = appCanvas.height;
+    const cx = Margins.left + ((x - p.x0) / (p.xend - p.x0)) * (w - Margins.left - Margins.right);
+    const cy = Margins.top + ((p.yrange - y) / (p.yrange * 2)) * (h - Margins.top - Margins.bottom);
+    return [cx, cy];
+  }
+
+  function evaluateMath(compiled, x, y) {
+    try { return compiled.evaluate({ x, y, e: Math.E, pi: Math.PI }); } 
+    catch(e) { return NaN; }
+  }
+
+  function calculatePoints(p) {
+    const pts = [{ x: p.x0, y: p.y0, slope: evaluateMath(compiledF, p.x0, p.y0) }];
+    for (let i = 0; i < p.n; i++) {
+      const cur = pts[pts.length - 1];
+      const nextX = cur.x + p.h;
+      const nextY = cur.y + p.h * cur.slope;
+      const nextSlope = evaluateMath(compiledF, nextX, nextY);
+      pts.push({ x: +nextX.toFixed(8), y: nextY, slope: nextSlope });
+    }
+    return pts;
+  }
+
+  function drawGridAndAxes(p) {
+    ctx.clearRect(0, 0, appCanvas.width, appCanvas.height);
+    
+    ctx.strokeStyle = Theme.grid;
+    ctx.lineWidth = 1;
+    ctx.font = `10px "JetBrains Mono"`;
+    ctx.fillStyle = Theme.text;
+    
+    const xSteps = 10;
+    const ySteps = 10;
+    
+    ctx.textAlign = 'center';
+    for (let i = 0; i <= xSteps; i++) {
+      const x = p.x0 + i*(p.xend - p.x0)/xSteps;
+      const [cx] = mapToCanvas(x, 0, p);
+      ctx.beginPath(); ctx.moveTo(cx, Margins.top); ctx.lineTo(cx, appCanvas.height - Margins.bottom); ctx.stroke();
+      ctx.fillText(x.toFixed(1), cx, appCanvas.height - Margins.bottom + 20);
+    }
+    
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i <= ySteps; i++) {
+      const y = -p.yrange + i * p.yrange * 2 / ySteps;
+      const [, cy] = mapToCanvas(0, y, p);
+      ctx.beginPath(); ctx.moveTo(Margins.left, cy); ctx.lineTo(appCanvas.width - Margins.right, cy); ctx.stroke();
+      if(Math.abs(y) > 0.001) ctx.fillText(y.toFixed(1), Margins.left - 10, cy);
+    }
+
+    // Main Axes
+    ctx.strokeStyle = Theme.axis;
+    ctx.lineWidth = 2;
+    const [zx, zy] = mapToCanvas(Math.max(p.x0, 0), 0, p);
+    
+    if(zy >= Margins.top && zy <= appCanvas.height - Margins.bottom) {
+      ctx.beginPath(); ctx.moveTo(Margins.left, zy); ctx.lineTo(appCanvas.width - Margins.right, zy); ctx.stroke();
+    }
+    if(zx >= Margins.left && zx <= appCanvas.width - Margins.right) {
+      ctx.beginPath(); ctx.moveTo(zx, Margins.top); ctx.lineTo(zx, appCanvas.height - Margins.bottom); ctx.stroke();
+    }
+  }
+
+  function drawTrueSolution(p) {
+    if (!compiledTrue) return;
+    ctx.beginPath();
+    ctx.strokeStyle = Theme.trueSol;
+    ctx.lineWidth = 2;
+    
+    const segments = 200;
+    let started = false;
+    
+    for (let i = 0; i <= segments; i++) {
+      const x = p.x0 + i * (p.xend - p.x0) / segments;
+      const y = evaluateMath(compiledTrue, x, 0);
+      if (isNaN(y) || !isFinite(y)) continue;
+      
+      const [cx, cy] = mapToCanvas(x, y, p);
+      if (!started) { ctx.moveTo(cx, cy); started = true; } 
+      else { ctx.lineTo(cx, cy); }
+    }
+    ctx.stroke();
+  }
+
+  function updateStatusBar(p, progress) {
+    const bar = document.getElementById('statusBar');
+    if(points.length === 0) {
+      bar.innerHTML = `<div class="status-item">System Standby</div>`;
+      return;
+    }
+    
+    const idx = Math.floor(progress);
+    const cur = points[idx];
+    
+    let html = `
+      <div class="status-item">Step: <span>${idx}/${p.n}</span></div>
+      <div class="status-item">X: <span>${cur.x.toFixed(4)}</span></div>
+      <div class="status-item">Y: <span>${cur.y.toFixed(5)}</span></div>
+    `;
+    if (cur.slope !== undefined) html += `<div class="status-item">dy/dx: <span>${cur.slope.toFixed(4)}</span></div>`;
+    
+    if (compiledTrue) {
+      const exact = evaluateMath(compiledTrue, cur.x, 0);
+      if (!isNaN(exact) && isFinite(exact)) {
+         html += `<div class="status-item">Error: <span style="color:var(--accent-red)">${Math.abs(cur.y - exact).toFixed(5)}</span></div>`;
+      }
+    }
+    bar.innerHTML = html;
+  }
+
+  function renderFrame(progress) {
+    const p = getParams();
+    drawGridAndAxes(p);
+    drawTrueSolution(p);
+
+    if (!points.length) return;
+
+    const maxIdx = Math.floor(progress);
+    const remainder = progress - maxIdx;
+
+    // Tangents
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < maxIdx; i++) {
+      const pt = points[i];
+      const [cx, cy] = mapToCanvas(pt.x, pt.y, p);
+      const extX = p.h * 0.8;
+      const [tx, ty] = mapToCanvas(pt.x + extX, pt.y + pt.slope * extX, p);
+      
+      ctx.beginPath();
+      ctx.strokeStyle = Theme.tangent;
+      ctx.setLineDash([4, 4]);
+      ctx.moveTo(cx, cy); ctx.lineTo(tx, ty);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    // Euler Path
+    ctx.beginPath();
+    ctx.strokeStyle = Theme.euler;
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    const [startX, startY] = mapToCanvas(points[0].x, points[0].y, p);
+    ctx.moveTo(startX, startY);
+
+    for (let i = 1; i <= maxIdx; i++) {
+      const [cx, cy] = mapToCanvas(points[i].x, points[i].y, p);
+      ctx.lineTo(cx, cy);
+    }
+
+    let lastCx = startX, lastCy = startY;
+    if (maxIdx < points.length - 1 && remainder > 0) {
+      const p1 = points[maxIdx];
+      const p2 = points[maxIdx + 1];
+      const interpX = p1.x + (p2.x - p1.x) * remainder;
+      const interpY = p1.y + (p2.y - p1.y) * remainder;
+      const [ix, iy] = mapToCanvas(interpX, interpY, p);
+      ctx.lineTo(ix, iy);
+      lastCx = ix; lastCy = iy;
+    } else if (maxIdx > 0) {
+       const [cx, cy] = mapToCanvas(points[maxIdx].x, points[maxIdx].y, p);
+       lastCx = cx; lastCy = cy;
+    }
+    
+    ctx.stroke();
+
+    // Points
+    for (let i = 0; i <= maxIdx; i++) {
+      const [cx, cy] = mapToCanvas(points[i].x, points[i].y, p);
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#000';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = Theme.euler;
+      ctx.stroke();
+    }
+
+    // Current point glow
+    ctx.beginPath();
+    ctx.arc(lastCx, lastCy, 6, 0, Math.PI * 2);
+    ctx.fillStyle = Theme.euler;
+    ctx.shadowColor = 'rgba(255,255,255,0.8)';
+    ctx.shadowBlur = 10;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    updateStatusBar(p, progress);
+  }
+
+  function animateApp() {
+    const speedRaw = parseInt(document.getElementById('speed').value);
+    const stepIncrement = 0.005 + (speedRaw / 100) * 0.15; 
+
+    if (currentAnimProgress < targetProgress) {
+      currentAnimProgress += stepIncrement;
+      if (currentAnimProgress > targetProgress) currentAnimProgress = targetProgress;
+      renderFrame(currentAnimProgress);
+      animId = requestAnimationFrame(animateApp);
+    } else {
+      cancelAnimationFrame(animId);
+    }
+  }
+
+  function initMath() {
+    const p = getParams();
+    document.getElementById('error-msg').innerText = '';
+    
+    try { compiledF = math.compile(p.expr); } 
+    catch(e) { document.getElementById('error-msg').innerText = 'Syntax Error in f(x, y)'; return false; }
+    
+    try { compiledTrue = p.trueExpr ? math.compile(p.trueExpr) : null; } 
+    catch(e) { compiledTrue = null; }
+    
+    points = calculatePoints(p);
+    return true;
+  }
+
+  document.getElementById('btnRun').addEventListener('click', () => {
+    cancelAnimationFrame(animId);
+    if (!initMath()) return;
+    currentAnimProgress = 0;
+    targetProgress = points.length - 1;
+    animateApp();
+  });
+
+  document.getElementById('btnStep').addEventListener('click', () => {
+    cancelAnimationFrame(animId);
+    if (points.length === 0) {
+      if (!initMath()) return;
+      currentAnimProgress = 0;
+      targetProgress = 0;
+    }
+    if (targetProgress < points.length - 1) {
+      targetProgress = Math.floor(targetProgress) + 1;
+      animateApp();
+    }
+  });
+
+  document.getElementById('btnReset').addEventListener('click', () => {
+    cancelAnimationFrame(animId);
+    points = [];
+    currentAnimProgress = 0;
+    targetProgress = 0;
+    document.getElementById('error-msg').innerText = '';
+    renderFrame(0);
+  });
+
+  document.getElementById('btnDefault').addEventListener('click', () => {
+    document.getElementById('fxy').value = "x + 2*y";
+    document.getElementById('ftrue').value = "-0.5*x - 0.25 + 0.25*exp(2*x)";
+    document.getElementById('x0').value = "0";
+    document.getElementById('y0').value = "0";
+    document.getElementById('h').value = "0.25";
+    document.getElementById('n').value = "8";
+    document.getElementById('xend').value = "2";
+    document.getElementById('yrange').value = "5";
+    document.getElementById('speed').value = "70";
+    document.getElementById('btnReset').click();
+    document.getElementById('btnRun').click();
+  });
+
+  setTimeout(() => {
+    resizeAppCanvas();
+    if (initMath()) {
+      targetProgress = points.length - 1;
+      currentAnimProgress = targetProgress;
+      renderFrame(currentAnimProgress);
+    }
+  }, 100);
+
+</script>
+</body>
+</html>
