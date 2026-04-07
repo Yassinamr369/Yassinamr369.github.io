@@ -361,12 +361,6 @@
     overflow: hidden;
   }
 
-  canvas#app-canvas {
-    width: 100%;
-    flex: 1;
-    display: block;
-  }
-
   .status-bar {
     height: 40px;
     background: rgba(20, 20, 20, 0.9);
@@ -382,14 +376,95 @@
 
   .status-item span { color: var(--text-main); font-weight: 700; }
 
-  /* Responsive */
-  @media (max-width: 900px) {
-    .app-container { grid-template-columns: 1fr; }
-    #app-section { padding: 40px 5%; }
+  /* ─── ZOOM HINT ────────────────────────── */
+  .zoom-hint {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 0.8s ease;
   }
 
-  @media (max-width: 500px) {
+  canvas#app-canvas {
+    width: 100%;
+    flex: 1;
+    display: block;
+    cursor: grab;
+  }
+  canvas#app-canvas:active {
+    cursor: grabbing;
+  }
+
+  /* ─── RESPONSIVE ────────────────────────── */
+  @media (max-width: 900px) {
+    .app-container {
+      grid-template-columns: 1fr;
+      padding: 20px;
+      gap: 20px;
+      border-radius: 16px;
+    }
+    #app-section {
+      padding: 30px 4% 60px;
+      min-height: unset;
+      align-items: flex-start;
+    }
+    .stage {
+      min-height: 340px;
+    }
+    canvas#app-canvas {
+      min-height: 300px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .hero-title {
+      font-size: clamp(2rem, 11vw, 3.5rem);
+      letter-spacing: -1px;
+    }
+    .hero-subtitle {
+      font-size: 0.72rem;
+      margin-bottom: 36px;
+    }
+    .badge {
+      font-size: 9px;
+      padding: 6px 12px;
+      margin-bottom: 20px;
+    }
+    .author-name { font-size: 1.1rem; }
+    .author-id { font-size: 0.72rem; }
+    .scroll-down { bottom: 24px; font-size: 9px; }
+
+    .app-container {
+      padding: 16px;
+      gap: 16px;
+    }
+    .section-title { font-size: 1rem; }
+    .field-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .field input { padding: 9px 10px; font-size: 12px; }
+    button { font-size: 11px; padding: 12px; }
+
+    .status-bar {
+      flex-wrap: wrap;
+      height: auto;
+      padding: 8px 12px;
+      gap: 8px;
+      row-gap: 4px;
+    }
+    .status-item { font-size: 10px; }
+
+    .stage { min-height: 280px; }
+    canvas#app-canvas { min-height: 240px; }
+  }
+
+  @media (max-width: 400px) {
     .field-grid { grid-template-columns: 1fr; }
+    .actions { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </head>
@@ -455,6 +530,7 @@
 
     <main class="stage">
       <canvas id="app-canvas"></canvas>
+      <div class="zoom-hint" id="zoomHint">Scroll / Pinch to zoom · Drag to pan</div>
       <div class="status-bar" id="statusBar">
         <div class="status-item">System Standby</div>
       </div>
@@ -478,6 +554,25 @@
   window.addEventListener('mousemove', (e) => {
     mouse.x = e.x;
     mouse.y = e.y;
+  });
+
+  // Touch support for hero particle interaction
+  heroCanvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = heroCanvas.getBoundingClientRect();
+    mouse.x = touch.clientX - rect.left;
+    mouse.y = touch.clientY - rect.top;
+  }, { passive: false });
+
+  heroCanvas.addEventListener('touchend', () => {
+    mouse.x = null;
+    mouse.y = null;
+  });
+
+  window.addEventListener('mouseleave', () => {
+    mouse.x = null;
+    mouse.y = null;
   });
 
   function initHeroCanvas() {
@@ -605,6 +700,114 @@
   
   const Margins = { left: 50, right: 30, top: 40, bottom: 40 };
 
+  // ─── ZOOM / PAN STATE ───────────────────────────────
+  let zoomState = { scale: 1, offsetX: 0, offsetY: 0 };
+  let isPanning = false;
+  let panStart = { x: 0, y: 0 };
+  let lastPinchDist = null;
+
+  function resetZoom() {
+    zoomState = { scale: 1, offsetX: 0, offsetY: 0 };
+    if (points.length > 0) renderFrame(currentAnimProgress);
+    else renderFrame(0);
+  }
+
+  // Scroll wheel zoom
+  appCanvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.12 : 0.88;
+    const rect = appCanvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (appCanvas.width / rect.width);
+    const my = (e.clientY - rect.top) * (appCanvas.height / rect.height);
+    zoomState.offsetX = mx - (mx - zoomState.offsetX) * factor;
+    zoomState.offsetY = my - (my - zoomState.offsetY) * factor;
+    zoomState.scale *= factor;
+    zoomState.scale = Math.max(0.2, Math.min(20, zoomState.scale));
+    renderFrame(currentAnimProgress);
+    fadeZoomHint();
+  }, { passive: false });
+
+  // Mouse drag pan
+  appCanvas.addEventListener('mousedown', (e) => { isPanning = true; panStart = { x: e.clientX, y: e.clientY }; });
+  window.addEventListener('mousemove', (e) => {
+    if (!isPanning) return;
+    const rect = appCanvas.getBoundingClientRect();
+    const scaleX = appCanvas.width / rect.width;
+    const scaleY = appCanvas.height / rect.height;
+    zoomState.offsetX += (e.clientX - panStart.x) * scaleX;
+    zoomState.offsetY += (e.clientY - panStart.y) * scaleY;
+    panStart = { x: e.clientX, y: e.clientY };
+    renderFrame(currentAnimProgress);
+  });
+  window.addEventListener('mouseup', () => { isPanning = false; });
+
+  // Touch pinch zoom + drag pan
+  appCanvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      isPanning = true;
+      panStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else if (e.touches.length === 2) {
+      isPanning = false;
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastPinchDist = Math.sqrt(dx * dx + dy * dy);
+    }
+  }, { passive: true });
+
+  appCanvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (e.touches.length === 1 && isPanning) {
+      const rect = appCanvas.getBoundingClientRect();
+      const scaleX = appCanvas.width / rect.width;
+      const scaleY = appCanvas.height / rect.height;
+      zoomState.offsetX += (e.touches[0].clientX - panStart.x) * scaleX;
+      zoomState.offsetY += (e.touches[0].clientY - panStart.y) * scaleY;
+      panStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      renderFrame(currentAnimProgress);
+    } else if (e.touches.length === 2 && lastPinchDist != null) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const newDist = Math.sqrt(dx * dx + dy * dy);
+      const factor = newDist / lastPinchDist;
+      // Zoom toward midpoint
+      const rect = appCanvas.getBoundingClientRect();
+      const mx = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left) * (appCanvas.width / rect.width);
+      const my = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top) * (appCanvas.height / rect.height);
+      zoomState.offsetX = mx - (mx - zoomState.offsetX) * factor;
+      zoomState.offsetY = my - (my - zoomState.offsetY) * factor;
+      zoomState.scale *= factor;
+      zoomState.scale = Math.max(0.2, Math.min(20, zoomState.scale));
+      lastPinchDist = newDist;
+      renderFrame(currentAnimProgress);
+      fadeZoomHint();
+    }
+  }, { passive: false });
+
+  appCanvas.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) lastPinchDist = null;
+    if (e.touches.length === 0) isPanning = false;
+  });
+
+  // Double-tap / double-click to reset zoom
+  let lastTap = 0;
+  appCanvas.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTap < 300) resetZoom();
+    lastTap = now;
+  });
+  appCanvas.addEventListener('dblclick', resetZoom);
+
+  // Fade the zoom hint after 4s
+  let zoomHintTimer;
+  function fadeZoomHint() {
+    const hint = document.getElementById('zoomHint');
+    if (!hint) return;
+    hint.style.opacity = '0.6';
+    clearTimeout(zoomHintTimer);
+    zoomHintTimer = setTimeout(() => { hint.style.opacity = '0'; }, 2500);
+  }
+  setTimeout(() => fadeZoomHint(), 3000);
+
   function getParams() {
     return {
       expr: document.getElementById('fxy').value,
@@ -621,8 +824,11 @@
   function mapToCanvas(x, y, p) {
     const w = appCanvas.width;
     const h = appCanvas.height;
-    const cx = Margins.left + ((x - p.x0) / (p.xend - p.x0)) * (w - Margins.left - Margins.right);
-    const cy = Margins.top + ((p.yrange - y) / (p.yrange * 2)) * (h - Margins.top - Margins.bottom);
+    const baseX = Margins.left + ((x - p.x0) / (p.xend - p.x0)) * (w - Margins.left - Margins.right);
+    const baseY = Margins.top + ((p.yrange - y) / (p.yrange * 2)) * (h - Margins.top - Margins.bottom);
+    // Apply zoom around offset
+    const cx = (baseX - zoomState.offsetX) * zoomState.scale + zoomState.offsetX;
+    const cy = (baseY - zoomState.offsetY) * zoomState.scale + zoomState.offsetY;
     return [cx, cy];
   }
 
@@ -843,6 +1049,7 @@
   document.getElementById('btnRun').addEventListener('click', () => {
     cancelAnimationFrame(animId);
     if (!initMath()) return;
+    resetZoom();
     currentAnimProgress = 0;
     targetProgress = points.length - 1;
     animateApp();
@@ -866,6 +1073,7 @@
     points = [];
     currentAnimProgress = 0;
     targetProgress = 0;
+    resetZoom();
     document.getElementById('error-msg').innerText = '';
     renderFrame(0);
   });
@@ -896,4 +1104,3 @@
 </script>
 </body>
 </html>
-
