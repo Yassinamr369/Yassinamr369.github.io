@@ -1,1579 +1,1803 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Euler's Method | Yassin Amr Abdelaziz</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@300;400;700&family=Syncopate:wght@700&display=swap" rel="stylesheet" />
-<style>
-  :root {
-    /* Ultra-Premium Dark Theme */
-    --bg-base: #030303;
-    --bg-panel: rgba(10, 10, 10, 0.7);
-    --border: #1f1f1f;
-    --text-main: #ffffff;
-    --text-muted: #737373;
-    
-    /* Accents */
-    --accent-glow: rgba(255, 255, 255, 0.1);
-    --accent-blue: #3b82f6;
-    --accent-purple: #8b5cf6;
-    --accent-green: #10b981;
-    --accent-red: #ef4444;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Euler's Method | Yassin Amr Abdelaziz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@300;400;700&family=Syncopate:wght@700&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      /* Ultra-Premium Dark Theme */
+      --bg-base: #030303;
+      --bg-panel: rgba(10, 10, 10, 0.7);
+      --border: #1f1f1f;
+      --text-main: #ffffff;
+      --text-muted: #737373;
 
-    --font-sans: 'Inter', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
-    --font-display: 'Syncopate', sans-serif;
-  }
+      /* Accents */
+      --accent-glow: rgba(255, 255, 255, 0.1);
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
 
-  *, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    background-color: var(--bg-base);
-    color: var(--text-main);
-    font-family: var(--font-sans);
-    overflow-x: hidden;
-  }
-
-  
-  /* ─── VERSION BANNER ───────────────────── */
-  .version-banner {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    background: var(--accent-blue);
-    color: #fff;
-    text-align: center;
-    padding: 10px;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 700;
-    z-index: 9999;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-  }
-  .version-banner a {
-    color: #fff;
-    text-decoration: underline;
-    margin-left: 15px;
-  }
-  .version-banner a:hover {
-    color: #e2e8f0;
-  }
-  /* ─── SCROLLBAR ───────────────────────── */
-  ::-webkit-scrollbar { width: 8px; }
-  ::-webkit-scrollbar-track { background: var(--bg-base); }
-  ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #555; }
-
-  /* ─── HERO SECTION ─────────────────────── */
-  #hero {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-  }
-
-  #hero-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    pointer-events: none; /* mouse handled via window listener */
-  }
-
-  .hero-content {
-    position: relative;
-    z-index: 10;
-    text-align: center;
-    pointer-events: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .badge {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-    padding: 8px 16px;
-    border-radius: 100px;
-    background: var(--bg-panel);
-    backdrop-filter: blur(10px);
-    margin-bottom: 30px;
-    animation: fadeUp 1s ease forwards 0.2s;
-    opacity: 0;
-  }
-
-  .hero-title {
-    font-family: var(--font-display);
-    font-size: clamp(3rem, 8vw, 6rem);
-    line-height: 1.1;
-    letter-spacing: -2px;
-    background: linear-gradient(180deg, #ffffff 0%, #737373 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 10px;
-    animation: fadeUp 1s ease forwards 0.4s;
-    opacity: 0;
-  }
-
-  .hero-subtitle {
-    font-family: var(--font-mono);
-    font-size: clamp(0.8rem, 2vw, 1rem);
-    color: var(--text-muted);
-    letter-spacing: 0.1em;
-    margin-bottom: 60px;
-    animation: fadeUp 1s ease forwards 0.6s;
-    opacity: 0;
-  }
-
-  .author-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-    animation: fadeUp 1s ease forwards 0.8s;
-    opacity: 0;
-  }
-
-  .author-name {
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: -0.5px;
-  }
-
-  .author-id {
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    letter-spacing: 0.2em;
-  }
-
-  @keyframes fadeUp {
-    0% { opacity: 0; transform: translateY(30px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ─── APP SECTION ──────────────────────── */
-  #app-section {
-    min-height: 100vh;
-    padding: 100px 5%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(180deg, var(--bg-base) 0%, #080808 100%);
-  }
-
-  .app-container {
-    width: 100%;
-    max-width: 1200px;
-    display: grid;
-    grid-template-columns: 350px 1fr;
-    gap: 30px;
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 30px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    backdrop-filter: blur(20px);
-  }
-
-  /* ─── CONTROLS ─────────────────────── */
-  .sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  .section-title {
-    font-family: var(--font-display);
-    font-size: 1.2rem;
-    letter-spacing: -1px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 15px;
-  }
-
-  .field-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-  }
-
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .field.full { grid-column: 1 / -1; }
-
-  .field label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-
-  .field input {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text-main);
-    font-family: var(--font-mono);
-    font-size: 13px;
-    padding: 10px 12px;
-    outline: none;
-    transition: all 0.3s ease;
-  }
-
-  .field input:focus {
-    border-color: #fff;
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  .actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  button {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    padding: 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    border: 1px solid transparent;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .btn-primary {
-    grid-column: 1 / -1;
-    background: var(--text-main);
-    color: var(--bg-base);
-  }
-
-  .btn-primary:hover {
-    background: #e0e0e0;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(255,255,255,0.1);
-  }
-
-  .btn-secondary {
-    background: transparent;
-    border-color: var(--border);
-    color: var(--text-main);
-  }
-
-  .btn-secondary:hover {
-    border-color: var(--text-muted);
-    background: rgba(255,255,255,0.05);
-  }
-
-  .full-width {
-    grid-column: 1 / -1;
-  }
-
-  /* Custom Slider */
-  input[type=range] {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 2px;
-    background: var(--border);
-    outline: none;
-  }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--text-main);
-    cursor: pointer;
-    box-shadow: 0 0 10px rgba(255,255,255,0.5);
-    transition: transform 0.2s;
-  }
-  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.5); }
-
-  #error-msg {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--accent-red);
-    min-height: 15px;
-  }
-
-  /* ─── CANVAS STAGE ─────────────────────── */
-  .stage {
-    position: relative;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    background: #000;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .status-bar {
-    height: 40px;
-    background: rgba(20, 20, 20, 0.9);
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    gap: 20px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-
-  .status-item span { color: var(--text-main); font-weight: 700; }
-
-  /* ─── ZOOM HINT ────────────────────────── */
-  .zoom-hint {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: var(--text-muted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    pointer-events: none;
-    opacity: 0.6;
-    transition: opacity 0.8s ease;
-  }
-
-  canvas#app-canvas {
-    width: 100%;
-    flex: 1;
-    display: block;
-    cursor: grab;
-  }
-  canvas#app-canvas:active {
-    cursor: grabbing;
-  }
-
-  /* ─── RESPONSIVE ────────────────────────── */
-  @media (max-width: 900px) {
-    .app-container {
-      grid-template-columns: 1fr;
-      padding: 20px;
-      gap: 20px;
-      border-radius: 16px;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-display: 'Syncopate', sans-serif;
     }
-    #app-section {
-      padding: 30px 4% 60px;
-      min-height: unset;
-      align-items: flex-start;
-    }
-    .stage {
-      min-height: 340px;
-    }
-    canvas#app-canvas {
-      min-height: 300px;
-    }
-  }
 
-  @media (max-width: 600px) {
-    /* ── Hero ── */
-    .hero-title {
-      font-size: clamp(1.8rem, 10vw, 3.2rem);
-      letter-spacing: -0.5px;
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-    .hero-subtitle {
-      font-size: 0.68rem;
-      letter-spacing: 0.06em;
-      margin-bottom: 28px;
+
+    html {
+      scroll-behavior: smooth;
     }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      overflow-x: hidden;
+    }
+
+
+    /* ─── VERSION BANNER ───────────────────── */
+    .version-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--accent-blue);
+      color: #fff;
+      text-align: center;
+      padding: 10px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      z-index: 9999;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .version-banner a {
+      color: #fff;
+      text-decoration: underline;
+      margin-left: 15px;
+    }
+
+    .version-banner a:hover {
+      color: #e2e8f0;
+    }
+
+    /* ─── SCROLLBAR ───────────────────────── */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-base);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* ─── HERO SECTION ─────────────────────── */
+    #hero {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    #hero-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      /* mouse handled via window listener */
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     .badge {
-      font-size: 8px;
-      padding: 5px 11px;
-      letter-spacing: 0.12em;
-      margin-bottom: 18px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 100px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(10px);
+      margin-bottom: 30px;
+      animation: fadeUp 1s ease forwards 0.2s;
+      opacity: 0;
     }
-    .author-name { font-size: 1rem; }
-    .author-id { font-size: 0.68rem; letter-spacing: 0.12em; }
 
-    /* ── App section ── */
-    .app-container {
-      padding: 14px;
-      gap: 14px;
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 8vw, 6rem);
+      line-height: 1.1;
+      letter-spacing: -2px;
+      background: linear-gradient(180deg, #ffffff 0%, #737373 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+      animation: fadeUp 1s ease forwards 0.4s;
+      opacity: 0;
     }
-    .section-title {
-      font-size: 0.9rem;
+
+    .hero-subtitle {
+      font-family: var(--font-mono);
+      font-size: clamp(0.8rem, 2vw, 1rem);
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      margin-bottom: 60px;
+      animation: fadeUp 1s ease forwards 0.6s;
+      opacity: 0;
+    }
+
+    .author-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      animation: fadeUp 1s ease forwards 0.8s;
+      opacity: 0;
+    }
+
+    .author-name {
+      font-size: 1.5rem;
+      font-weight: 600;
       letter-spacing: -0.5px;
     }
-    .field-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-    .field input { padding: 8px 10px; font-size: 12px; }
-    button { font-size: 11px; padding: 11px 8px; letter-spacing: 0.05em; }
 
-    /* ── Status bar ── */
-    .status-bar {
-      flex-wrap: wrap;
-      height: auto;
-      padding: 8px 12px;
-      gap: 8px;
-      row-gap: 4px;
+    .author-id {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      letter-spacing: 0.2em;
     }
-    .status-item { font-size: 10px; }
 
-    /* ── Canvas ── */
-    .stage { min-height: 260px; }
-    canvas#app-canvas { min-height: 220px; }
-  }
+    @keyframes fadeUp {
+      0% {
+        opacity: 0;
+        transform: translateY(30px);
+      }
 
-  @media (max-width: 420px) {
-    .hero-title { font-size: clamp(1.6rem, 9vw, 2.6rem); }
-    .field-grid { grid-template-columns: 1fr 1fr; }
-    .actions { grid-template-columns: 1fr 1fr; }
-  }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-  @media (max-width: 360px) {
-    .field-grid { grid-template-columns: 1fr; }
-    .hero-title { font-size: clamp(1.4rem, 8.5vw, 2.2rem); }
-  }
+    /* ─── APP SECTION ──────────────────────── */
+    #app-section {
+      min-height: 100vh;
+      padding: 100px 5%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(180deg, var(--bg-base) 0%, #080808 100%);
+    }
 
-  /* ─── METHOD SELECTOR ───────────────────── */
-  .method-selector {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .method-btn {
-    flex: 1;
-    min-width: 0;
-    padding: 8px 6px;
-    font-size: 10px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-    letter-spacing: 0.04em;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-  }
-  .method-btn.active-euler  { border-color: #ffffff; color: #ffffff; background: rgba(255,255,255,0.07); }
-  .method-btn.active-heun   { border-color: #3b82f6; color: #3b82f6; background: rgba(59,130,246,0.08); }
-  .method-btn.active-rk4    { border-color: #a78bfa; color: #a78bfa; background: rgba(167,139,250,0.08); }
+    .app-container {
+      width: 100%;
+      max-width: 1200px;
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 30px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(20px);
+    }
 
-  .info-icon { font-style: normal; opacity: 0.6; margin-left: 3px; font-size: 9px; vertical-align: top; }
-  .method-btn:hover .info-icon { opacity: 1; }
+    /* ─── CONTROLS ─────────────────────── */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
 
-  .method-details {
-    margin-top: 12px;
-    font-size: 11px;
-    line-height: 1.4;
-    color: var(--text-muted);
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-    transition: all 0.3s ease;
-  }
-  .method-details summary {
-    cursor: pointer;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-main);
-    outline: none;
-    font-weight: 700;
-  }
-  .method-details summary::-webkit-details-marker {
-    display: none;
-  }
-  .method-details summary::before {
-    content: '▶ ';
-    font-size: 8px;
-    display: inline-block;
-    transition: transform 0.2s;
-    margin-right: 4px;
-    color: var(--accent-blue);
-  }
-  .method-details[open] summary::before {
-    transform: rotate(90deg);
-  }
-  .details-content {
-    margin-top: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .details-content p {
-    margin: 0;
-  }
-  .details-content strong {
-    color: var(--text-main);
-    display: block;
-    margin-bottom: 3px;
-    font-family: var(--font-mono);
-  }
-  .comparison-note {
-    margin-top: 6px;
-    border-top: 1px dashed var(--border);
-    padding-top: 10px;
-    color: var(--text-main);
-  }
-  .comparison-note span { display: block; margin-bottom: 4px; }
-  .comp-euler { color: #ffffff; }
-  .comp-heun { color: #3b82f6; }
-  .comp-rk4 { color: #a78bfa; }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      letter-spacing: -1px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 15px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .field input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .field input:focus {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-primary {
+      grid-column: 1 / -1;
+      background: var(--text-main);
+      color: var(--bg-base);
+    }
+
+    .btn-primary:hover {
+      background: #e0e0e0;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    /* Custom Slider */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 2px;
+      background: var(--border);
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--text-main);
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      transition: transform 0.2s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.5);
+    }
+
+    #error-msg {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent-red);
+      min-height: 15px;
+    }
+
+    /* ─── CANVAS STAGE ─────────────────────── */
+    .stage {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .status-bar {
+      height: 40px;
+      background: rgba(20, 20, 20, 0.9);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 20px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .status-item span {
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    /* ─── ZOOM HINT ────────────────────────── */
+    .zoom-hint {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      pointer-events: none;
+      opacity: 0.6;
+      transition: opacity 0.8s ease;
+    }
+
+    canvas#app-canvas {
+      width: 100%;
+      flex: 1;
+      display: block;
+      cursor: grab;
+    }
+
+    canvas#app-canvas:active {
+      cursor: grabbing;
+    }
+
+    /* ─── RESPONSIVE ────────────────────────── */
+    @media (max-width: 900px) {
+      .app-container {
+        grid-template-columns: 1fr;
+        padding: 20px;
+        gap: 20px;
+        border-radius: 16px;
+      }
+
+      #app-section {
+        padding: 30px 4% 60px;
+        min-height: unset;
+        align-items: flex-start;
+      }
+
+      .stage {
+        min-height: 340px;
+      }
+
+      canvas#app-canvas {
+        min-height: 300px;
+      }
+    }
+
+    @media (max-width: 600px) {
+
+      /* ── Hero ── */
+      .hero-title {
+        font-size: clamp(1.8rem, 10vw, 3.2rem);
+        letter-spacing: -0.5px;
+      }
+
+      .hero-subtitle {
+        font-size: 0.68rem;
+        letter-spacing: 0.06em;
+        margin-bottom: 28px;
+      }
+
+      .badge {
+        font-size: 8px;
+        padding: 5px 11px;
+        letter-spacing: 0.12em;
+        margin-bottom: 18px;
+      }
+
+      .author-name {
+        font-size: 1rem;
+      }
+
+      .author-id {
+        font-size: 0.68rem;
+        letter-spacing: 0.12em;
+      }
+
+      /* ── App section ── */
+      .app-container {
+        padding: 14px;
+        gap: 14px;
+      }
+
+      .section-title {
+        font-size: 0.9rem;
+        letter-spacing: -0.5px;
+      }
+
+      .field-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .field input {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      button {
+        font-size: 11px;
+        padding: 11px 8px;
+        letter-spacing: 0.05em;
+      }
+
+      /* ── Status bar ── */
+      .status-bar {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 8px 12px;
+        gap: 8px;
+        row-gap: 4px;
+      }
+
+      .status-item {
+        font-size: 10px;
+      }
+
+      /* ── Canvas ── */
+      .stage {
+        min-height: 260px;
+      }
+
+      canvas#app-canvas {
+        min-height: 220px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .hero-title {
+        font-size: clamp(1.6rem, 9vw, 2.6rem);
+      }
+
+      .field-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .actions {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .field-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-title {
+        font-size: clamp(1.4rem, 8.5vw, 2.2rem);
+      }
+    }
+
+    /* ─── METHOD SELECTOR ───────────────────── */
+    .method-selector {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .method-btn {
+      flex: 1;
+      min-width: 0;
+      padding: 8px 6px;
+      font-size: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+    }
+
+    .method-btn.active-euler {
+      border-color: #ffffff;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .method-btn.active-heun {
+      border-color: #3b82f6;
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .method-btn.active-rk4 {
+      border-color: #a78bfa;
+      color: #a78bfa;
+      background: rgba(167, 139, 250, 0.08);
+    }
+
+    .info-icon {
+      font-style: normal;
+      opacity: 0.6;
+      margin-left: 3px;
+      font-size: 9px;
+      vertical-align: top;
+    }
+
+    .method-btn:hover .info-icon {
+      opacity: 1;
+    }
+
+    .method-details {
+      margin-top: 12px;
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .method-details summary {
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-main);
+      outline: none;
+      font-weight: 700;
+    }
+
+    .method-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .method-details summary::before {
+      content: '▶ ';
+      font-size: 8px;
+      display: inline-block;
+      transition: transform 0.2s;
+      margin-right: 4px;
+      color: var(--accent-blue);
+    }
+
+    .method-details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .details-content {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .details-content p {
+      margin: 0;
+    }
+
+    .details-content strong {
+      color: var(--text-main);
+      display: block;
+      margin-bottom: 3px;
+      font-family: var(--font-mono);
+    }
+
+    .comparison-note {
+      margin-top: 6px;
+      border-top: 1px dashed var(--border);
+      padding-top: 10px;
+      color: var(--text-main);
+    }
+
+    .comparison-note span {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .comp-euler {
+      color: #ffffff;
+    }
+
+    .comp-heun {
+      color: #3b82f6;
+    }
+
+    .comp-rk4 {
+      color: #a78bfa;
+    }
 
 
-  /* ─── PRESETS ────────────────────────────── */
-  .presets-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
-  }
-  .preset-btn {
-    padding: 9px 8px;
-    font-size: 10px;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.02);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    line-height: 1.4;
-    letter-spacing: 0.02em;
-  }
-  .preset-btn:hover {
-    border-color: var(--text-muted);
-    color: var(--text-main);
-    background: rgba(255,255,255,0.06);
-    transform: translateY(-1px);
-  }
-  .preset-btn .preset-name {
-    font-weight: 700;
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    display: block;
-    margin-bottom: 2px;
-  }
-  .preset-btn .preset-eq {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: var(--accent-green);
-    display: block;
-  }
-  .preset-btn .preset-desc {
-    font-size: 8.5px;
-    color: #555;
-    display: block;
-    margin-top: 2px;
-  }
+    /* ─── PRESETS ────────────────────────────── */
+    .presets-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
 
-  /* ─── STABILITY WARNING ──────────────────── */
-  #stabilityWarn {
-    display: none;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: #f59e0b;
-    background: rgba(245,158,11,0.08);
-    border: 1px solid rgba(245,158,11,0.3);
-    border-radius: 6px;
-    padding: 8px 10px;
-    margin-top: -8px;
-  }
+    .preset-btn {
+      padding: 9px 8px;
+      font-size: 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      line-height: 1.4;
+      letter-spacing: 0.02em;
+    }
 
-  /* ─── MATH PANEL ─────────────────────────── */
-  .math-panel {
-    background: rgba(255,255,255,0.015);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    color: var(--text-muted);
-    line-height: 1.7;
-  }
-  .math-panel .formula {
-    color: #e2e8f0;
-    font-size: 11.5px;
-    font-weight: 700;
-    display: block;
-    margin: 6px 0 8px;
-    letter-spacing: 0.02em;
-  }
-  .math-panel .insight {
-    font-size: 10px;
-    color: #4a5568;
-    border-top: 1px solid var(--border);
-    padding-top: 8px;
-    margin-top: 8px;
-  }
-  .math-panel .insight.warn { color: #c05621; }
-  .math-panel .insight.good { color: #276749; }
+    .preset-btn:hover {
+      border-color: var(--text-muted);
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateY(-1px);
+    }
 
-  /* ─── DATA TABLE ─────────────────────────── */
-  #table-section {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 5% 80px;
-  }
-  .table-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-  }
-  .table-header h3 {
-    font-family: var(--font-display);
-    font-size: 1rem;
-    letter-spacing: -0.5px;
-  }
-  .table-legend {
-    display: flex;
-    gap: 14px;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: var(--text-muted);
-  }
-  .legend-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    margin-right: 4px;
-    vertical-align: middle;
-  }
-  .table-wrapper {
-    overflow-x: auto;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--bg-panel);
-    max-height: 340px;
-    overflow-y: auto;
-  }
-  table.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: var(--font-mono);
-    font-size: 11px;
-  }
-  table.data-table thead {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: #0d0d0d;
-  }
-  table.data-table th {
-    padding: 10px 14px;
-    text-align: left;
-    color: var(--text-muted);
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    border-bottom: 1px solid var(--border);
-  }
-  table.data-table td {
-    padding: 8px 14px;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-    color: #aaa;
-    transition: background 0.2s;
-  }
-  table.data-table tbody tr:hover td { background: rgba(255,255,255,0.04); }
-  table.data-table tr.active-row td { background: rgba(255,255,255,0.07); color: #fff; }
-  table.data-table td.err-low  { color: #10b981; }
-  table.data-table td.err-mid  { color: #f59e0b; }
-  table.data-table td.err-high { color: #ef4444; }
-  table.data-table td.exact-val { color: #3b82f6; }
-  table.data-table td.step-num { color: #fff; font-weight: 700; }
-  table.data-table td.y-euler  { color: #fff; }
-  table.data-table td.y-heun   { color: #3b82f6; }
-  table.data-table td.y-rk4    { color: #a78bfa; }
+    .preset-btn .preset-name {
+      font-weight: 700;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      display: block;
+      margin-bottom: 2px;
+    }
 
-  /* ─── CANVAS TOOLTIP ─────────────────────── */
-  #canvasTooltip {
-    position: fixed;
-    display: none;
-    background: rgba(10,10,10,0.95);
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    color: #e2e8f0;
-    pointer-events: none;
-    z-index: 999;
-    line-height: 1.8;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-  }
-  #canvasTooltip .tt-row { display: flex; gap: 8px; justify-content: space-between; }
-  #canvasTooltip .tt-label { color: #555; }
-  #canvasTooltip .tt-val { color: #fff; font-weight: 700; }
-  #canvasTooltip .tt-err-low  { color: #10b981; }
-  #canvasTooltip .tt-err-mid  { color: #f59e0b; }
-  #canvasTooltip .tt-err-high { color: #ef4444; }
-</style>
+    .preset-btn .preset-eq {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--accent-green);
+      display: block;
+    }
+
+    .preset-btn .preset-desc {
+      font-size: 8.5px;
+      color: #555;
+      display: block;
+      margin-top: 2px;
+    }
+
+    /* ─── STABILITY WARNING ──────────────────── */
+    #stabilityWarn {
+      display: none;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-top: -8px;
+    }
+
+    /* ─── MATH PANEL ─────────────────────────── */
+    .math-panel {
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .math-panel .formula {
+      color: #e2e8f0;
+      font-size: 11.5px;
+      font-weight: 700;
+      display: block;
+      margin: 6px 0 8px;
+      letter-spacing: 0.02em;
+    }
+
+    .math-panel .insight {
+      font-size: 10px;
+      color: #4a5568;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+      margin-top: 8px;
+    }
+
+    .math-panel .insight.warn {
+      color: #c05621;
+    }
+
+    .math-panel .insight.good {
+      color: #276749;
+    }
+
+    /* ─── DATA TABLE ─────────────────────────── */
+    #table-section {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 5% 80px;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .table-header h3 {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      letter-spacing: -0.5px;
+    }
+
+    .table-legend {
+      display: flex;
+      gap: 14px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-panel);
+      max-height: 340px;
+      overflow-y: auto;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    table.data-table thead {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #0d0d0d;
+    }
+
+    table.data-table th {
+      padding: 10px 14px;
+      text-align: left;
+      color: var(--text-muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    table.data-table td {
+      padding: 8px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      color: #aaa;
+      transition: background 0.2s;
+    }
+
+    table.data-table tbody tr:hover td {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    table.data-table tr.active-row td {
+      background: rgba(255, 255, 255, 0.07);
+      color: #fff;
+    }
+
+    table.data-table td.err-low {
+      color: #10b981;
+    }
+
+    table.data-table td.err-mid {
+      color: #f59e0b;
+    }
+
+    table.data-table td.err-high {
+      color: #ef4444;
+    }
+
+    table.data-table td.exact-val {
+      color: #3b82f6;
+    }
+
+    table.data-table td.step-num {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    table.data-table td.y-euler {
+      color: #fff;
+    }
+
+    table.data-table td.y-heun {
+      color: #3b82f6;
+    }
+
+    table.data-table td.y-rk4 {
+      color: #a78bfa;
+    }
+
+    /* ─── CANVAS TOOLTIP ─────────────────────── */
+    #canvasTooltip {
+      position: fixed;
+      display: none;
+      background: rgba(10, 10, 10, 0.95);
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: #e2e8f0;
+      pointer-events: none;
+      z-index: 999;
+      line-height: 1.8;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    #canvasTooltip .tt-row {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+    }
+
+    #canvasTooltip .tt-label {
+      color: #555;
+    }
+
+    #canvasTooltip .tt-val {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    #canvasTooltip .tt-err-low {
+      color: #10b981;
+    }
+
+    #canvasTooltip .tt-err-mid {
+      color: #f59e0b;
+    }
+
+    #canvasTooltip .tt-err-high {
+      color: #ef4444;
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="version-banner">
-  Version 2 (Multi-Method View) | <a href="index.html">View Version 1 (Single Method View)</a>
-</div>
-
-
-<section id="hero">
-  <canvas id="hero-canvas"></canvas>
-  
-  <div class="hero-content">
-    <div class="badge">Petroleum Science student | Personal Project</div>
-    <h1 class="hero-title">EULER'S METHOD</h1>
-    <h2 class="hero-subtitle">Interactive Approximation Engine</h2>
-    
-    <div class="author-info">
-      <div class="author-name">Yassin Amr Abdelaziz</div>
-      <div class="author-id">ID: 2458053</div>
-    </div>
+  <div class="version-banner">
+    Version 2 (Multi-Method View) | <a href="index.html">View Version 1 (Single Method View)</a>
   </div>
 
-</section>
 
-<section id="app-section">
-  <div class="app-container">
-    
-    <aside class="sidebar">
-      <h3 class="section-title">Parameters</h3>
-      
-      <div class="field-grid">
-        <div class="field full">
-          <label>Derivative f(x, y)</label>
-          <input type="text" id="fxy" value="x + 2*y" />
-        </div>
-        <div class="field full">
-          <label>Exact Solution (Optional)</label>
-          <input type="text" id="ftrue" value="-0.5*x - 0.25 + 0.25*exp(2*x)" />
-        </div>
-        <div class="field"><label>Initial X (x₀)</label><input type="number" id="x0" value="0" step="0.1" /></div>
-        <div class="field"><label>Initial Y (y₀)</label><input type="number" id="y0" value="0" step="0.1" /></div>
-        <div class="field"><label>Step Size (h)</label><input type="number" id="h" value="0.25" step="0.05" /></div>
-        <div class="field"><label>Iterations (n)</label><input type="number" id="n" value="50" min="1" max="5000" /></div>
-        <div class="field"><label>Plot X Max</label><input type="number" id="xend" value="10" step="0.5" /></div>
-        <div class="field"><label>Plot Y Range (±)</label><input type="number" id="yrange" value="50" step="5" /></div>
-        
-        <div class="field full" style="margin-top: 10px;">
-          <label>Animation Speed</label>
-          <input type="range" min="1" max="1000" value="70" id="speed" />
-        </div>
+  <section id="hero">
+    <canvas id="hero-canvas"></canvas>
+
+    <div class="hero-content">
+      <div class="badge">Petroleum Science student | Personal Project</div>
+      <h1 class="hero-title">EULER'S METHOD</h1>
+      <h2 class="hero-subtitle">Interactive Approximation Engine</h2>
+
+      <div class="author-info">
+        <div class="author-name">Yassin Amr Abdelaziz</div>
+        <div class="author-id">ID: 2458053</div>
       </div>
+    </div>
 
-      <div id="error-msg"></div>
+  </section>
 
-      <!-- Method Selector -->
-      <div>
-        <h3 class="section-title">Method</h3>
-        <div class="method-selector">
-          <button class="method-btn active-euler" data-method="euler" id="mbEuler" title="Euler Method (Basic)&#10;Follows slope once per step">Euler <span class="info-icon">ℹ️</span></button>
-          <button class="method-btn" data-method="heun" id="mbHeun" title="Heun Method (Improved Euler)&#10;Average of two slopes">Heun's <span class="info-icon">ℹ️</span></button>
-          <button class="method-btn" data-method="rk4" id="mbRK4" title="Runge-Kutta 4 (RK4)&#10;Combines 4 slopes for high accuracy">RK4 <span class="info-icon">ℹ️</span></button>
-        </div>
-        
-        <details class="method-details">
-          <summary>Learn More about Methods</summary>
-          <div class="details-content">
-            <p><strong>Euler Method (Basic)</strong>This method moves step by step using the slope at the current point. It is simple and fast, but not very accurate because it only looks at one direction.</p>
-            <p><strong>Heun Method (Improved Euler)</strong>This method improves Euler by checking the slope at the start and the end of the step, then taking the average. This makes it more accurate than Euler.</p>
-            <p><strong>Runge-Kutta 4 (RK4)</strong>This method calculates the slope four times in each step and combines them. It is much more accurate and widely used in engineering and physics.</p>
-            
-            <div class="comparison-note">
-              <span class="comp-euler"><strong>Euler:</strong> simplest but least accurate</span>
-              <span class="comp-heun"><strong>Heun:</strong> better accuracy</span>
-              <span class="comp-rk4"><strong>RK4:</strong> most accurate and recommended</span>
-            </div>
+  <section id="app-section">
+    <div class="app-container">
+
+      <aside class="sidebar">
+        <h3 class="section-title">Parameters</h3>
+
+        <div class="field-grid">
+          <div class="field full">
+            <label>Derivative f(x, y)</label>
+            <input type="text" id="fxy" value="x + 2*y" />
           </div>
-        </details>
-      </div>
+          <div class="field full">
+            <label>Exact Solution (Optional)</label>
+            <input type="text" id="ftrue" value="-0.5*x - 0.25 + 0.25*exp(2*x)" />
+          </div>
+          <div class="field"><label>Initial X (x₀)</label><input type="number" id="x0" value="0" step="0.1" /></div>
+          <div class="field"><label>Initial Y (y₀)</label><input type="number" id="y0" value="0" step="0.1" /></div>
+          <div class="field"><label>Step Size (h)</label><input type="number" id="h" value="0.25" step="0.05" /></div>
+          <div class="field"><label>Iterations (n)</label><input type="number" id="n" value="15" min="1" max="5000" />
+          </div>
+          <div class="field"><label>Plot X Max</label><input type="number" id="xend" value="10" step="0.5" /></div>
+          <div class="field"><label>Plot Y Range (±)</label><input type="number" id="yrange" value="15" step="5" />
+          </div>
 
-      <!-- Stability Warning -->
-      <div id="stabilityWarn">⚠ Large step size — method may be unstable or inaccurate.</div>
+          <div class="field full" style="margin-top: 10px;">
+            <label>Animation Speed</label>
+            <input type="range" min="1" max="1000" value="70" id="speed" />
+          </div>
+        </div>
 
-      <!-- Math Explanation -->
-      <div class="math-panel" id="mathPanel">
-        <span style="color:#666;font-size:9px;text-transform:uppercase;letter-spacing:.1em">Update Rule</span>
-        <span class="formula">y<sub>n+1</sub> = y<sub>n</sub> + h · f(x<sub>n</sub>, y<sub>n</sub>)</span>
-        Each step follows the tangent line at the current point. Smaller h → better accuracy.
-        <div class="insight" id="mathInsight">Run the simulation to see accuracy feedback.</div>
-      </div>
+        <div id="error-msg"></div>
 
-      <!-- Equation Presets -->
-      <div>
-        <h3 class="section-title">Equation Presets</h3>
-        <div class="presets-grid" id="presetsGrid"></div>
-      </div>
+        <!-- Method Selector -->
+        <div>
+          <h3 class="section-title">Method</h3>
+          <div class="method-selector">
+            <button class="method-btn active-euler" data-method="euler" id="mbEuler"
+              title="Euler Method (Basic)&#10;Follows slope once per step">Euler <span
+                class="info-icon">ℹ️</span></button>
+            <button class="method-btn" data-method="heun" id="mbHeun"
+              title="Heun Method (Improved Euler)&#10;Average of two slopes">Heun's <span
+                class="info-icon">ℹ️</span></button>
+            <button class="method-btn" data-method="rk4" id="mbRK4"
+              title="Runge-Kutta 4 (RK4)&#10;Combines 4 slopes for high accuracy">RK4 <span
+                class="info-icon">ℹ️</span></button>
+          </div>
 
-      <div class="actions">
-        <button class="btn-primary" id="btnRun">Execute</button>
-        <button class="btn-secondary" id="btnStep">Step</button>
-        <button class="btn-secondary" id="btnReset">Clear</button>
-        <button class="btn-secondary" id="btnResetZoom" title="Reset Zoom and Panning position">Reset View</button>
-        <button class="btn-secondary full-width" id="btnDefault">Default</button>
-      </div>
-    </aside>
+          <details class="method-details">
+            <summary>Learn More about Methods</summary>
+            <div class="details-content">
+              <p><strong>Euler Method (Basic)</strong>This method moves step by step using the slope at the current
+                point. It is simple and fast, but not very accurate because it only looks at one direction.</p>
+              <p><strong>Heun Method (Improved Euler)</strong>This method improves Euler by checking the slope at the
+                start and the end of the step, then taking the average. This makes it more accurate than Euler.</p>
+              <p><strong>Runge-Kutta 4 (RK4)</strong>This method calculates the slope four times in each step and
+                combines them. It is much more accurate and widely used in engineering and physics.</p>
 
-    <main class="stage">
-      <canvas id="app-canvas"></canvas>
-      <div class="zoom-hint" id="zoomHint">Scroll / Pinch to zoom · Drag to pan</div>
-      <div class="status-bar" id="statusBar">
-        <div class="status-item">System Standby</div>
-      </div>
-    </main>
+              <div class="comparison-note">
+                <span class="comp-euler"><strong>Euler:</strong> simplest but least accurate</span>
+                <span class="comp-heun"><strong>Heun:</strong> better accuracy</span>
+                <span class="comp-rk4"><strong>RK4:</strong> most accurate and recommended</span>
+              </div>
+            </div>
+          </details>
+        </div>
 
-  </div>
-</section>
+        <!-- Stability Warning -->
+        <div id="stabilityWarn">⚠ Large step size — method may be unstable or inaccurate.</div>
 
-<!-- Data Table Section -->
-<section id="table-section">
-  <div class="table-header">
-    <h3>Computation Table</h3>
-    <div class="table-legend">
-      <span><span class="legend-dot" style="background:#fff"></span>Euler</span>
-      <span><span class="legend-dot" style="background:#3b82f6"></span>Heun's</span>
-      <span><span class="legend-dot" style="background:#a78bfa"></span>RK4</span>
-      <span><span class="legend-dot" style="background:#10b981"></span>Exact</span>
+        <!-- Math Explanation -->
+        <div class="math-panel" id="mathPanel">
+          <span style="color:#666;font-size:9px;text-transform:uppercase;letter-spacing:.1em">Update Rule</span>
+          <span class="formula">y<sub>n+1</sub> = y<sub>n</sub> + h · f(x<sub>n</sub>, y<sub>n</sub>)</span>
+          Each step follows the tangent line at the current point. Smaller h → better accuracy.
+          <div class="insight" id="mathInsight">Run the simulation to see accuracy feedback.</div>
+        </div>
+
+        <!-- Equation Presets -->
+        <div>
+          <h3 class="section-title">Equation Presets</h3>
+          <div class="presets-grid" id="presetsGrid"></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" id="btnRun">Execute</button>
+          <button class="btn-secondary" id="btnStep">Step</button>
+          <button class="btn-secondary" id="btnReset">Clear</button>
+          <button class="btn-secondary" id="btnResetZoom" title="Reset Zoom and Panning position">Reset View</button>
+          <button class="btn-secondary full-width" id="btnDefault">Default</button>
+        </div>
+      </aside>
+
+      <main class="stage">
+        <canvas id="app-canvas"></canvas>
+        <div class="zoom-hint" id="zoomHint">Scroll / Pinch to zoom · Drag to pan</div>
+        <div class="status-bar" id="statusBar">
+          <div class="status-item">System Standby</div>
+        </div>
+      </main>
+
     </div>
-  </div>
-  <div class="table-wrapper">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Step</th>
-          <th>x</th>
-          <th>y (Euler)</th>
-          <th>y (Heun)</th>
-          <th>y (RK4)</th>
-          <th>dy/dx</th>
-          <th>Exact y</th>
-          <th>Error (Euler)</th>
-          <th>Error (Heun)</th>
-          <th>Error (RK4)</th>
-        </tr>
-      </thead>
-      <tbody id="dataTableBody">
-        <tr><td colspan="10" style="text-align:center;padding:30px;color:#333">Run the simulation to populate the table.</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
+  </section>
 
-<div id="canvasTooltip"></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.0/math.min.js"></script>
-<script>
-  /* ══════════════ HERO INTERACTIVE NETWORK ══════════════ */
-  const heroCanvas = document.getElementById('hero-canvas');
-  const hctx = heroCanvas.getContext('2d');
-  
-  let particlesArray = [];
-  const numberOfParticles = 120;
-  
-  // Mouse interaction state
-  const mouse = { x: null, y: null, radius: 150 };
+  <!-- Data Table Section -->
+  <section id="table-section">
+    <div class="table-header">
+      <h3>Computation Table</h3>
+      <div class="table-legend">
+        <span><span class="legend-dot" style="background:#fff"></span>Euler</span>
+        <span><span class="legend-dot" style="background:#3b82f6"></span>Heun's</span>
+        <span><span class="legend-dot" style="background:#a78bfa"></span>RK4</span>
+        <span><span class="legend-dot" style="background:#10b981"></span>Exact</span>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>x</th>
+            <th>y (Euler)</th>
+            <th>y (Heun)</th>
+            <th>y (RK4)</th>
+            <th>dy/dx</th>
+            <th>Exact y</th>
+            <th>Error (Euler)</th>
+            <th>Error (Heun)</th>
+            <th>Error (RK4)</th>
+          </tr>
+        </thead>
+        <tbody id="dataTableBody">
+          <tr>
+            <td colspan="10" style="text-align:center;padding:30px;color:#333">Run the simulation to populate the table.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-  window.addEventListener('mousemove', (e) => {
-    mouse.x = e.x;
-    mouse.y = e.y;
-  });
+  <div id="canvasTooltip"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.0/math.min.js"></script>
+  <script>
+    /* ══════════════ HERO INTERACTIVE NETWORK ══════════════ */
+    const heroCanvas = document.getElementById('hero-canvas');
+    const hctx = heroCanvas.getContext('2d');
 
-  // Touch: hero particle interaction disabled on mobile to allow scrolling
-  // Mouse repulsion still works on desktop via window mousemove listener
+    let particlesArray = [];
+    const numberOfParticles = 120;
 
-  window.addEventListener('mouseleave', () => {
-    mouse.x = null;
-    mouse.y = null;
-  });
+    // Mouse interaction state
+    const mouse = { x: null, y: null, radius: 150 };
 
-  function initHeroCanvas() {
-    heroCanvas.width = window.innerWidth;
-    heroCanvas.height = window.innerHeight;
-  }
-  
-  window.addEventListener('resize', initHeroCanvas);
-  initHeroCanvas();
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.x;
+      mouse.y = e.y;
+    });
 
-  class Particle {
-    constructor() {
-      this.x = Math.random() * heroCanvas.width;
-      this.y = Math.random() * heroCanvas.height;
-      this.size = Math.random() * 2 + 0.5;
-      this.baseX = this.x;
-      this.baseY = this.y;
-      this.density = (Math.random() * 20) + 1;
-      this.vx = (Math.random() - 0.5) * 0.5;
-      this.vy = (Math.random() - 0.5) * 0.5;
+    // Touch: hero particle interaction disabled on mobile to allow scrolling
+    // Mouse repulsion still works on desktop via window mousemove listener
+
+    window.addEventListener('mouseleave', () => {
+      mouse.x = null;
+      mouse.y = null;
+    });
+
+    function initHeroCanvas() {
+      heroCanvas.width = window.innerWidth;
+      heroCanvas.height = window.innerHeight;
     }
-    
-    draw() {
-      hctx.beginPath();
-      hctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      hctx.fillStyle = '#ffffff';
-      hctx.fill();
-    }
-    
-    update() {
-      // Float movement
-      this.x += this.vx;
-      this.y += this.vy;
 
-      if(this.x > heroCanvas.width || this.x < 0) this.vx = -this.vx;
-      if(this.y > heroCanvas.height || this.y < 0) this.vy = -this.vy;
+    window.addEventListener('resize', initHeroCanvas);
+    initHeroCanvas();
 
-      // Mouse repulsion
-      if (mouse.x != null) {
-        let dx = mouse.x - this.x;
-        let dy = mouse.y - this.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-        let forceDirectionX = dx / distance;
-        let forceDirectionY = dy / distance;
-        let maxDistance = mouse.radius;
-        let force = (maxDistance - distance) / maxDistance;
-        let directionX = forceDirectionX * force * this.density;
-        let directionY = forceDirectionY * force * this.density;
+    class Particle {
+      constructor() {
+        this.x = Math.random() * heroCanvas.width;
+        this.y = Math.random() * heroCanvas.height;
+        this.size = Math.random() * 2 + 0.5;
+        this.baseX = this.x;
+        this.baseY = this.y;
+        this.density = (Math.random() * 20) + 1;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+      }
 
-        if (distance < mouse.radius) {
-          this.x -= directionX;
-          this.y -= directionY;
+      draw() {
+        hctx.beginPath();
+        hctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        hctx.fillStyle = '#ffffff';
+        hctx.fill();
+      }
+
+      update() {
+        // Float movement
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x > heroCanvas.width || this.x < 0) this.vx = -this.vx;
+        if (this.y > heroCanvas.height || this.y < 0) this.vy = -this.vy;
+
+        // Mouse repulsion
+        if (mouse.x != null) {
+          let dx = mouse.x - this.x;
+          let dy = mouse.y - this.y;
+          let distance = Math.sqrt(dx * dx + dy * dy);
+          let forceDirectionX = dx / distance;
+          let forceDirectionY = dy / distance;
+          let maxDistance = mouse.radius;
+          let force = (maxDistance - distance) / maxDistance;
+          let directionX = forceDirectionX * force * this.density;
+          let directionY = forceDirectionY * force * this.density;
+
+          if (distance < mouse.radius) {
+            this.x -= directionX;
+            this.y -= directionY;
+          }
         }
       }
     }
-  }
 
-  function connectParticles() {
-    for (let a = 0; a < particlesArray.length; a++) {
-      for (let b = a; b < particlesArray.length; b++) {
-        let dx = particlesArray[a].x - particlesArray[b].x;
-        let dy = particlesArray[a].y - particlesArray[b].y;
-        let distance = dx * dx + dy * dy;
-        
-        if (distance < 15000) {
-          let opacity = 1 - (distance / 15000);
-          hctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.2})`;
-          hctx.lineWidth = 1;
-          hctx.beginPath();
-          hctx.moveTo(particlesArray[a].x, particlesArray[a].y);
-          hctx.lineTo(particlesArray[b].x, particlesArray[b].y);
-          hctx.stroke();
+    function connectParticles() {
+      for (let a = 0; a < particlesArray.length; a++) {
+        for (let b = a; b < particlesArray.length; b++) {
+          let dx = particlesArray[a].x - particlesArray[b].x;
+          let dy = particlesArray[a].y - particlesArray[b].y;
+          let distance = dx * dx + dy * dy;
+
+          if (distance < 15000) {
+            let opacity = 1 - (distance / 15000);
+            hctx.strokeStyle = `rgba(255, 255, 255, ${opacity * 0.2})`;
+            hctx.lineWidth = 1;
+            hctx.beginPath();
+            hctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+            hctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+            hctx.stroke();
+          }
         }
       }
     }
-  }
 
-  function initParticles() {
-    particlesArray = [];
-    for (let i = 0; i < numberOfParticles; i++) {
-      particlesArray.push(new Particle());
+    function initParticles() {
+      particlesArray = [];
+      for (let i = 0; i < numberOfParticles; i++) {
+        particlesArray.push(new Particle());
+      }
     }
-  }
 
-  function animateHero() {
-    hctx.clearRect(0, 0, heroCanvas.width, heroCanvas.height);
-    for (let i = 0; i < particlesArray.length; i++) {
-      particlesArray[i].update();
-      particlesArray[i].draw();
+    function animateHero() {
+      hctx.clearRect(0, 0, heroCanvas.width, heroCanvas.height);
+      for (let i = 0; i < particlesArray.length; i++) {
+        particlesArray[i].update();
+        particlesArray[i].draw();
+      }
+      connectParticles();
+      requestAnimationFrame(animateHero);
     }
-    connectParticles();
-    requestAnimationFrame(animateHero);
-  }
 
-  initParticles();
-  animateHero();
+    initParticles();
+    animateHero();
 
-  /* ══════════════ EULER ENGINE ══════════════ */
-  const appCanvas = document.getElementById('app-canvas');
-  const ctx = appCanvas.getContext('2d');
-  
-  function resizeAppCanvas() {
-    const parent = appCanvas.parentElement;
-    appCanvas.width = parent.clientWidth;
-    appCanvas.height = parent.clientHeight - 40; 
-    if(points.length > 0) renderFrame(currentAnimProgress);
-  }
-  window.addEventListener('resize', resizeAppCanvas);
+    /* ══════════════ EULER ENGINE ══════════════ */
+    const appCanvas = document.getElementById('app-canvas');
+    const ctx = appCanvas.getContext('2d');
 
-  const Theme = {
-    grid: 'rgba(255, 255, 255, 0.05)',
-    axis: '#333333',
-    text: '#737373',
-    euler: '#ffffff',
-    tangent: '#555555',
-    trueSol: '#10b981'
-  };
-
-  let points = [];
-  let pointsHeun = [];
-  let pointsRK4 = [];
-  let compiledF = null;
-  let compiledTrue = null;
-  let animId = null;
-  let currentAnimProgress = 0;
-  let targetProgress = 0;
-  let activeMethods = new Set(['euler']); // which methods to show
-  let lockedTooltipIdx = null; // for click-locked tooltip
-  
-  const Margins = { left: 50, right: 30, top: 40, bottom: 40 };
-
-  // ─── ZOOM / PAN STATE ───────────────────────────────
-  let zoomState = { scale: 1, offsetX: 0, offsetY: 0 };
-  let isPanning = false;
-  let panStart = { x: 0, y: 0 };
-  let lastPinchDist = null;
-
-  function resetZoom() {
-    zoomState = { scale: 1, offsetX: 0, offsetY: 0 };
-    if (points.length > 0) renderFrame(currentAnimProgress);
-    else renderFrame(0);
-  }
-
-  // Scroll wheel zoom
-  appCanvas.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const factor = e.deltaY < 0 ? 1.12 : 0.88;
-    const rect = appCanvas.getBoundingClientRect();
-    const mx = (e.clientX - rect.left) * (appCanvas.width / rect.width);
-    const my = (e.clientY - rect.top) * (appCanvas.height / rect.height);
-    zoomState.offsetX = mx - (mx - zoomState.offsetX) * factor;
-    zoomState.offsetY = my - (my - zoomState.offsetY) * factor;
-    zoomState.scale *= factor;
-    zoomState.scale = Math.max(0.2, Math.min(20, zoomState.scale));
-    renderFrame(currentAnimProgress);
-    fadeZoomHint();
-  }, { passive: false });
-
-  // Mouse drag pan
-  appCanvas.addEventListener('mousedown', (e) => { isPanning = true; panStart = { x: e.clientX, y: e.clientY }; });
-  window.addEventListener('mousemove', (e) => {
-    if (!isPanning) return;
-    const rect = appCanvas.getBoundingClientRect();
-    const scaleX = appCanvas.width / rect.width;
-    const scaleY = appCanvas.height / rect.height;
-    zoomState.offsetX += (e.clientX - panStart.x) * scaleX;
-    zoomState.offsetY += (e.clientY - panStart.y) * scaleY;
-    panStart = { x: e.clientX, y: e.clientY };
-    renderFrame(currentAnimProgress);
-  });
-  window.addEventListener('mouseup', () => { isPanning = false; });
-
-  // Touch pinch zoom + drag pan
-  appCanvas.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      isPanning = true;
-      panStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    } else if (e.touches.length === 2) {
-      isPanning = false;
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      lastPinchDist = Math.sqrt(dx * dx + dy * dy);
+    function resizeAppCanvas() {
+      const parent = appCanvas.parentElement;
+      appCanvas.width = parent.clientWidth;
+      appCanvas.height = parent.clientHeight - 40;
+      if (points.length > 0) renderFrame(currentAnimProgress);
     }
-  }, { passive: true });
+    window.addEventListener('resize', resizeAppCanvas);
 
-  appCanvas.addEventListener('touchmove', (e) => {
-    // Only block scroll for 2-finger pinch zoom; single finger scrolls the page normally
-    if (e.touches.length === 2 && lastPinchDist != null) {
+    const Theme = {
+      grid: 'rgba(255, 255, 255, 0.05)',
+      axis: '#333333',
+      text: '#737373',
+      euler: '#ffffff',
+      tangent: '#555555',
+      trueSol: '#10b981'
+    };
+
+    let points = [];
+    let pointsHeun = [];
+    let pointsRK4 = [];
+    let compiledF = null;
+    let compiledTrue = null;
+    let animId = null;
+    let currentAnimProgress = 0;
+    let targetProgress = 0;
+    let activeMethods = new Set(['euler']); // which methods to show
+    let lockedTooltipIdx = null; // for click-locked tooltip
+
+    const Margins = { left: 50, right: 30, top: 40, bottom: 40 };
+
+    // ─── ZOOM / PAN STATE ───────────────────────────────
+    let zoomState = { scale: 1, offsetX: 0, offsetY: 0 };
+    let isPanning = false;
+    let panStart = { x: 0, y: 0 };
+    let lastPinchDist = null;
+
+    function resetZoom() {
+      zoomState = { scale: 1, offsetX: 0, offsetY: 0 };
+      if (points.length > 0) renderFrame(currentAnimProgress);
+      else renderFrame(0);
+    }
+
+    // Scroll wheel zoom
+    appCanvas.addEventListener('wheel', (e) => {
       e.preventDefault();
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const newDist = Math.sqrt(dx * dx + dy * dy);
-      const factor = newDist / lastPinchDist;
+      const factor = e.deltaY < 0 ? 1.12 : 0.88;
       const rect = appCanvas.getBoundingClientRect();
-      const mx = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left) * (appCanvas.width / rect.width);
-      const my = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top) * (appCanvas.height / rect.height);
+      const mx = (e.clientX - rect.left) * (appCanvas.width / rect.width);
+      const my = (e.clientY - rect.top) * (appCanvas.height / rect.height);
       zoomState.offsetX = mx - (mx - zoomState.offsetX) * factor;
       zoomState.offsetY = my - (my - zoomState.offsetY) * factor;
       zoomState.scale *= factor;
       zoomState.scale = Math.max(0.2, Math.min(20, zoomState.scale));
-      lastPinchDist = newDist;
       renderFrame(currentAnimProgress);
       fadeZoomHint();
-    }
-    // Single finger: do nothing here, let the browser handle page scroll
-  }, { passive: false });
+    }, { passive: false });
 
-  appCanvas.addEventListener('touchend', (e) => {
-    if (e.touches.length < 2) lastPinchDist = null;
-    if (e.touches.length === 0) isPanning = false;
-  });
+    // Mouse drag pan
+    appCanvas.addEventListener('mousedown', (e) => { isPanning = true; panStart = { x: e.clientX, y: e.clientY }; });
+    window.addEventListener('mousemove', (e) => {
+      if (!isPanning) return;
+      const rect = appCanvas.getBoundingClientRect();
+      const scaleX = appCanvas.width / rect.width;
+      const scaleY = appCanvas.height / rect.height;
+      zoomState.offsetX += (e.clientX - panStart.x) * scaleX;
+      zoomState.offsetY += (e.clientY - panStart.y) * scaleY;
+      panStart = { x: e.clientX, y: e.clientY };
+      renderFrame(currentAnimProgress);
+    });
+    window.addEventListener('mouseup', () => { isPanning = false; });
 
-  // Double-tap / double-click to reset zoom
-  let lastTap = 0;
-  appCanvas.addEventListener('touchend', (e) => {
-    const now = Date.now();
-    if (now - lastTap < 300) resetZoom();
-    lastTap = now;
-  });
-  appCanvas.addEventListener('dblclick', resetZoom);
-
-  // Fade the zoom hint after 4s
-  let zoomHintTimer;
-  function fadeZoomHint() {
-    const hint = document.getElementById('zoomHint');
-    if (!hint) return;
-    hint.style.opacity = '0.6';
-    clearTimeout(zoomHintTimer);
-    zoomHintTimer = setTimeout(() => { hint.style.opacity = '0'; }, 2500);
-  }
-  setTimeout(() => fadeZoomHint(), 3000);
-
-  function getParams() {
-    return {
-      expr: document.getElementById('fxy').value,
-      trueExpr: document.getElementById('ftrue').value,
-      x0: parseFloat(document.getElementById('x0').value),
-      y0: parseFloat(document.getElementById('y0').value),
-      h: parseFloat(document.getElementById('h').value),
-      n: parseInt(document.getElementById('n').value),
-      xend: parseFloat(document.getElementById('xend').value),
-      yrange: parseFloat(document.getElementById('yrange').value),
-    };
-  }
-
-  function mapToCanvas(x, y, p) {
-    const w = appCanvas.width;
-    const h = appCanvas.height;
-    const baseX = Margins.left + ((x - p.x0) / (p.xend - p.x0)) * (w - Margins.left - Margins.right);
-    const baseY = Margins.top + ((p.yrange - y) / (p.yrange * 2)) * (h - Margins.top - Margins.bottom);
-    // Apply zoom and pan
-    const cx = baseX * zoomState.scale + zoomState.offsetX;
-    const cy = baseY * zoomState.scale + zoomState.offsetY;
-    return [cx, cy];
-  }
-
-  function evaluateMath(compiled, x, y) {
-    try { return compiled.evaluate({ x, y, e: Math.E, pi: Math.PI, k: 1, g: 9.81 }); } 
-    catch(e) { return NaN; }
-  }
-
-  function evaluateExact(x) {
-    if (!compiledTrue) return NaN;
-    try { return compiledTrue.evaluate({ x, e: Math.E, pi: Math.PI, k: 1, g: 9.81 }); }
-    catch(e) { return NaN; }
-  }
-
-  function calculatePoints(p) {
-    const f = (x, y) => evaluateMath(compiledF, x, y);
-    const pts = [{ x: p.x0, y: p.y0, slope: f(p.x0, p.y0) }];
-    for (let i = 0; i < p.n; i++) {
-      const cur = pts[pts.length - 1];
-      const nextX = +(cur.x + p.h).toFixed(8);
-      const nextY = cur.y + p.h * cur.slope;
-      const nextSlope = f(nextX, nextY);
-      pts.push({ x: nextX, y: nextY, slope: nextSlope });
-    }
-    return pts;
-  }
-
-  function calculateHeun(p) {
-    const f = (x, y) => evaluateMath(compiledF, x, y);
-    const pts = [{ x: p.x0, y: p.y0, slope: f(p.x0, p.y0) }];
-    for (let i = 0; i < p.n; i++) {
-      const cur = pts[pts.length - 1];
-      const k1 = f(cur.x, cur.y);
-      const predX = +(cur.x + p.h).toFixed(8);
-      const predY = cur.y + p.h * k1;
-      const k2 = f(predX, predY);
-      const nextY = cur.y + (p.h / 2) * (k1 + k2);
-      pts.push({ x: predX, y: nextY, slope: f(predX, nextY) });
-    }
-    return pts;
-  }
-
-  function calculateRK4(p) {
-    const f = (x, y) => evaluateMath(compiledF, x, y);
-    const pts = [{ x: p.x0, y: p.y0, slope: f(p.x0, p.y0) }];
-    for (let i = 0; i < p.n; i++) {
-      const cur = pts[pts.length - 1];
-      const k1 = f(cur.x, cur.y);
-      const k2 = f(cur.x + p.h/2, cur.y + (p.h/2)*k1);
-      const k3 = f(cur.x + p.h/2, cur.y + (p.h/2)*k2);
-      const k4 = f(cur.x + p.h,   cur.y + p.h*k3);
-      const nextX = +(cur.x + p.h).toFixed(8);
-      const nextY = cur.y + (p.h/6)*(k1 + 2*k2 + 2*k3 + k4);
-      pts.push({ x: nextX, y: nextY, slope: f(nextX, nextY) });
-    }
-    return pts;
-  }
-
-  function drawGridAndAxes(p) {
-    ctx.clearRect(0, 0, appCanvas.width, appCanvas.height);
-    
-    ctx.strokeStyle = Theme.grid;
-    ctx.lineWidth = 1;
-    ctx.font = `10px "JetBrains Mono"`;
-    ctx.fillStyle = Theme.text;
-    
-    // Dynamically calculate grid limits based on current zoom so it extends indefinitely
-    // calculate bounds in Math coordinates based on canvas pixel bounds
-    function unmapX(px) {
-       return p.x0 + ((px - zoomState.offsetX) / zoomState.scale - Margins.left) / (appCanvas.width - Margins.left - Margins.right) * (p.xend - p.x0);
-    }
-    function unmapY(py) {
-       return p.yrange - ((py - zoomState.offsetY) / zoomState.scale - Margins.top) / (appCanvas.height - Margins.top - Margins.bottom) * (p.yrange * 2);
-    }
-
-    const minX = unmapX(Margins.left), maxX = unmapX(appCanvas.width - Margins.right);
-    const minY = unmapY(appCanvas.height - Margins.bottom), maxY = unmapY(Margins.top);
-
-    const xRange = maxX - minX;
-    const yRange = maxY - minY;
-
-    const xStep = Math.pow(10, Math.floor(Math.log10(xRange))) / 2;
-    const yStep = Math.pow(10, Math.floor(Math.log10(yRange))) / 2;
-
-    ctx.textAlign = 'center';
-    let curX = Math.floor(minX / xStep) * xStep;
-    while(curX <= maxX) {
-      if(curX >= p.x0 - 500 && curX <= p.xend + 500) { // arbitrary wide boundary
-         const [cx] = mapToCanvas(curX, 0, p);
-         ctx.beginPath(); ctx.moveTo(cx, Margins.top); ctx.lineTo(cx, appCanvas.height - Margins.bottom); ctx.stroke();
-         ctx.fillText(curX.toFixed(1), cx, appCanvas.height - Margins.bottom + 20);
+    // Touch pinch zoom + drag pan
+    appCanvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isPanning = true;
+        panStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length === 2) {
+        isPanning = false;
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastPinchDist = Math.sqrt(dx * dx + dy * dy);
       }
-      curX += xStep;
+    }, { passive: true });
+
+    appCanvas.addEventListener('touchmove', (e) => {
+      // Only block scroll for 2-finger pinch zoom; single finger scrolls the page normally
+      if (e.touches.length === 2 && lastPinchDist != null) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const newDist = Math.sqrt(dx * dx + dy * dy);
+        const factor = newDist / lastPinchDist;
+        const rect = appCanvas.getBoundingClientRect();
+        const mx = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left) * (appCanvas.width / rect.width);
+        const my = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top) * (appCanvas.height / rect.height);
+        zoomState.offsetX = mx - (mx - zoomState.offsetX) * factor;
+        zoomState.offsetY = my - (my - zoomState.offsetY) * factor;
+        zoomState.scale *= factor;
+        zoomState.scale = Math.max(0.2, Math.min(20, zoomState.scale));
+        lastPinchDist = newDist;
+        renderFrame(currentAnimProgress);
+        fadeZoomHint();
+      }
+      // Single finger: do nothing here, let the browser handle page scroll
+    }, { passive: false });
+
+    appCanvas.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) lastPinchDist = null;
+      if (e.touches.length === 0) isPanning = false;
+    });
+
+    // Double-tap / double-click to reset zoom
+    let lastTap = 0;
+    appCanvas.addEventListener('touchend', (e) => {
+      const now = Date.now();
+      if (now - lastTap < 300) resetZoom();
+      lastTap = now;
+    });
+    appCanvas.addEventListener('dblclick', resetZoom);
+
+    // Fade the zoom hint after 4s
+    let zoomHintTimer;
+    function fadeZoomHint() {
+      const hint = document.getElementById('zoomHint');
+      if (!hint) return;
+      hint.style.opacity = '0.6';
+      clearTimeout(zoomHintTimer);
+      zoomHintTimer = setTimeout(() => { hint.style.opacity = '0'; }, 2500);
     }
-    
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    let curY = Math.floor(minY / yStep) * yStep;
-    while(curY <= maxY) {
-      const [, cy] = mapToCanvas(0, curY, p);
-      ctx.beginPath(); ctx.moveTo(Margins.left, cy); ctx.lineTo(appCanvas.width - Margins.right, cy); ctx.stroke();
-      if(Math.abs(curY) > 0.001) ctx.fillText(curY.toFixed(1), Margins.left - 10, cy);
-      curY += yStep;
+    setTimeout(() => fadeZoomHint(), 3000);
+
+    function getParams() {
+      return {
+        expr: document.getElementById('fxy').value,
+        trueExpr: document.getElementById('ftrue').value,
+        x0: parseFloat(document.getElementById('x0').value),
+        y0: parseFloat(document.getElementById('y0').value),
+        h: parseFloat(document.getElementById('h').value),
+        n: parseInt(document.getElementById('n').value),
+        xend: parseFloat(document.getElementById('xend').value),
+        yrange: parseFloat(document.getElementById('yrange').value),
+      };
     }
 
-    // Main Axes
-    ctx.strokeStyle = Theme.axis;
-    ctx.lineWidth = 2;
-    const [zx, zy] = mapToCanvas(Math.max(p.x0, 0), 0, p);
-    
-    if(zy >= Margins.top && zy <= appCanvas.height - Margins.bottom) {
-      ctx.beginPath(); ctx.moveTo(Margins.left, zy); ctx.lineTo(appCanvas.width - Margins.right, zy); ctx.stroke();
+    function mapToCanvas(x, y, p) {
+      const w = appCanvas.width;
+      const h = appCanvas.height;
+      const baseX = Margins.left + ((x - p.x0) / (p.xend - p.x0)) * (w - Margins.left - Margins.right);
+      const baseY = Margins.top + ((p.yrange - y) / (p.yrange * 2)) * (h - Margins.top - Margins.bottom);
+      // Apply zoom and pan
+      const cx = baseX * zoomState.scale + zoomState.offsetX;
+      const cy = baseY * zoomState.scale + zoomState.offsetY;
+      return [cx, cy];
     }
-    if(zx >= Margins.left && zx <= appCanvas.width - Margins.right) {
-      ctx.beginPath(); ctx.moveTo(zx, Margins.top); ctx.lineTo(zx, appCanvas.height - Margins.bottom); ctx.stroke();
-    }
-  }
 
-  function drawTrueSolution(p) {
-    if (!compiledTrue) return;
-    ctx.beginPath();
-    ctx.strokeStyle = Theme.trueSol;
-    ctx.lineWidth = 2;
-    
-    const segments = 200;
-    let started = false;
-    
-    for (let i = 0; i <= segments; i++) {
-      const x = p.x0 + i * (p.xend - p.x0) / segments;
-      const y = evaluateExact(x);
-      if (isNaN(y) || !isFinite(y)) continue;
-      
-      const [cx, cy] = mapToCanvas(x, y, p);
-      if (!started) { ctx.moveTo(cx, cy); started = true; } 
-      else { ctx.lineTo(cx, cy); }
+    function evaluateMath(compiled, x, y) {
+      try { return compiled.evaluate({ x, y, e: Math.E, pi: Math.PI, k: 1, g: 9.81 }); }
+      catch (e) { return NaN; }
     }
-    ctx.stroke();
-  }
 
-  function updateStatusBar(p, progress) {
-    const bar = document.getElementById('statusBar');
-    if(points.length === 0) {
-      bar.innerHTML = `<div class="status-item">System Standby</div>`;
-      return;
+    function evaluateExact(x) {
+      if (!compiledTrue) return NaN;
+      try { return compiledTrue.evaluate({ x, e: Math.E, pi: Math.PI, k: 1, g: 9.81 }); }
+      catch (e) { return NaN; }
     }
-    
-    const idx = Math.floor(progress);
-    const cur = points[idx];
-    
-    let html = `
+
+    function calculatePoints(p) {
+      const f = (x, y) => evaluateMath(compiledF, x, y);
+      const pts = [{ x: p.x0, y: p.y0, slope: f(p.x0, p.y0) }];
+      for (let i = 0; i < p.n; i++) {
+        const cur = pts[pts.length - 1];
+        const nextX = +(cur.x + p.h).toFixed(8);
+        const nextY = cur.y + p.h * cur.slope;
+        const nextSlope = f(nextX, nextY);
+        pts.push({ x: nextX, y: nextY, slope: nextSlope });
+      }
+      return pts;
+    }
+
+    function calculateHeun(p) {
+      const f = (x, y) => evaluateMath(compiledF, x, y);
+      const pts = [{ x: p.x0, y: p.y0, slope: f(p.x0, p.y0) }];
+      for (let i = 0; i < p.n; i++) {
+        const cur = pts[pts.length - 1];
+        const k1 = f(cur.x, cur.y);
+        const predX = +(cur.x + p.h).toFixed(8);
+        const predY = cur.y + p.h * k1;
+        const k2 = f(predX, predY);
+        const nextY = cur.y + (p.h / 2) * (k1 + k2);
+        pts.push({ x: predX, y: nextY, slope: f(predX, nextY) });
+      }
+      return pts;
+    }
+
+    function calculateRK4(p) {
+      const f = (x, y) => evaluateMath(compiledF, x, y);
+      const pts = [{ x: p.x0, y: p.y0, slope: f(p.x0, p.y0) }];
+      for (let i = 0; i < p.n; i++) {
+        const cur = pts[pts.length - 1];
+        const k1 = f(cur.x, cur.y);
+        const k2 = f(cur.x + p.h / 2, cur.y + (p.h / 2) * k1);
+        const k3 = f(cur.x + p.h / 2, cur.y + (p.h / 2) * k2);
+        const k4 = f(cur.x + p.h, cur.y + p.h * k3);
+        const nextX = +(cur.x + p.h).toFixed(8);
+        const nextY = cur.y + (p.h / 6) * (k1 + 2 * k2 + 2 * k3 + k4);
+        pts.push({ x: nextX, y: nextY, slope: f(nextX, nextY) });
+      }
+      return pts;
+    }
+
+    function drawGridAndAxes(p) {
+      ctx.clearRect(0, 0, appCanvas.width, appCanvas.height);
+
+      ctx.strokeStyle = Theme.grid;
+      ctx.lineWidth = 1;
+      ctx.font = `10px "JetBrains Mono"`;
+      ctx.fillStyle = Theme.text;
+
+      // Dynamically calculate grid limits based on current zoom so it extends indefinitely
+      // calculate bounds in Math coordinates based on canvas pixel bounds
+      function unmapX(px) {
+        return p.x0 + ((px - zoomState.offsetX) / zoomState.scale - Margins.left) / (appCanvas.width - Margins.left - Margins.right) * (p.xend - p.x0);
+      }
+      function unmapY(py) {
+        return p.yrange - ((py - zoomState.offsetY) / zoomState.scale - Margins.top) / (appCanvas.height - Margins.top - Margins.bottom) * (p.yrange * 2);
+      }
+
+      const minX = unmapX(Margins.left), maxX = unmapX(appCanvas.width - Margins.right);
+      const minY = unmapY(appCanvas.height - Margins.bottom), maxY = unmapY(Margins.top);
+
+      const xRange = maxX - minX;
+      const yRange = maxY - minY;
+
+      const xStep = Math.pow(10, Math.floor(Math.log10(xRange))) / 2;
+      const yStep = Math.pow(10, Math.floor(Math.log10(yRange))) / 2;
+
+      ctx.textAlign = 'center';
+      let curX = Math.floor(minX / xStep) * xStep;
+      while (curX <= maxX) {
+        if (curX >= p.x0 - 500 && curX <= p.xend + 500) { // arbitrary wide boundary
+          const [cx] = mapToCanvas(curX, 0, p);
+          ctx.beginPath(); ctx.moveTo(cx, Margins.top); ctx.lineTo(cx, appCanvas.height - Margins.bottom); ctx.stroke();
+          ctx.fillText(curX.toFixed(1), cx, appCanvas.height - Margins.bottom + 20);
+        }
+        curX += xStep;
+      }
+
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      let curY = Math.floor(minY / yStep) * yStep;
+      while (curY <= maxY) {
+        const [, cy] = mapToCanvas(0, curY, p);
+        ctx.beginPath(); ctx.moveTo(Margins.left, cy); ctx.lineTo(appCanvas.width - Margins.right, cy); ctx.stroke();
+        if (Math.abs(curY) > 0.001) ctx.fillText(curY.toFixed(1), Margins.left - 10, cy);
+        curY += yStep;
+      }
+
+      // Main Axes
+      ctx.strokeStyle = Theme.axis;
+      ctx.lineWidth = 2;
+      const [zx, zy] = mapToCanvas(Math.max(p.x0, 0), 0, p);
+
+      if (zy >= Margins.top && zy <= appCanvas.height - Margins.bottom) {
+        ctx.beginPath(); ctx.moveTo(Margins.left, zy); ctx.lineTo(appCanvas.width - Margins.right, zy); ctx.stroke();
+      }
+      if (zx >= Margins.left && zx <= appCanvas.width - Margins.right) {
+        ctx.beginPath(); ctx.moveTo(zx, Margins.top); ctx.lineTo(zx, appCanvas.height - Margins.bottom); ctx.stroke();
+      }
+    }
+
+    function drawTrueSolution(p) {
+      if (!compiledTrue) return;
+      ctx.beginPath();
+      ctx.strokeStyle = Theme.trueSol;
+      ctx.lineWidth = 2;
+
+      const segments = 200;
+      let started = false;
+
+      for (let i = 0; i <= segments; i++) {
+        const x = p.x0 + i * (p.xend - p.x0) / segments;
+        const y = evaluateExact(x);
+        if (isNaN(y) || !isFinite(y)) continue;
+
+        const [cx, cy] = mapToCanvas(x, y, p);
+        if (!started) { ctx.moveTo(cx, cy); started = true; }
+        else { ctx.lineTo(cx, cy); }
+      }
+      ctx.stroke();
+    }
+
+    function updateStatusBar(p, progress) {
+      const bar = document.getElementById('statusBar');
+      if (points.length === 0) {
+        bar.innerHTML = `<div class="status-item">System Standby</div>`;
+        return;
+      }
+
+      const idx = Math.floor(progress);
+      const cur = points[idx];
+
+      let html = `
       <div class="status-item">Step: <span>${idx}/${p.n}</span></div>
       <div class="status-item">X: <span>${cur.x.toFixed(4)}</span></div>
       <div class="status-item">Y: <span>${cur.y.toFixed(5)}</span></div>
     `;
-    if (cur.slope !== undefined) html += `<div class="status-item">dy/dx: <span>${cur.slope.toFixed(4)}</span></div>`;
-    
-    if (compiledTrue) {
-      const exact = evaluateExact(cur.x);
-      if (!isNaN(exact) && isFinite(exact)) {
-         html += `<div class="status-item">Error: <span style="color:var(--accent-red)">${Math.abs(cur.y - exact).toFixed(5)}</span></div>`;
+      if (cur.slope !== undefined) html += `<div class="status-item">dy/dx: <span>${cur.slope.toFixed(4)}</span></div>`;
+
+      if (compiledTrue) {
+        const exact = evaluateExact(cur.x);
+        if (!isNaN(exact) && isFinite(exact)) {
+          html += `<div class="status-item">Error: <span style="color:var(--accent-red)">${Math.abs(cur.y - exact).toFixed(5)}</span></div>`;
+        }
       }
-    }
-    bar.innerHTML = html;
-  }
-
-  function drawMethodPath(pts, color, progress, p, dash = [], lineWidth = 2) {
-    if (!pts.length) return;
-    const maxIdx = Math.floor(progress);
-    const remainder = progress - maxIdx;
-
-    ctx.save();
-    ctx.globalAlpha = activeMethods.size > 1 ? 0.75 : 1.0; // 🔹 Makes overlap visible
-    if(dash.length) ctx.setLineDash(dash);
-
-    ctx.beginPath();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = lineWidth;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    const [sx, sy] = mapToCanvas(pts[0].x, pts[0].y, p);
-    ctx.moveTo(sx, sy);
-    for (let i = 1; i <= Math.min(maxIdx, pts.length - 1); i++) {
-      const [cx, cy] = mapToCanvas(pts[i].x, pts[i].y, p);
-      ctx.lineTo(cx, cy);
-    }
-    if (maxIdx < pts.length - 1 && remainder > 0) {
-      const a = pts[maxIdx], b = pts[maxIdx + 1];
-      const [ix, iy] = mapToCanvas(a.x + (b.x - a.x)*remainder, a.y + (b.y - a.y)*remainder, p);
-      ctx.lineTo(ix, iy);
-    }
-    ctx.stroke();
-
-    // Dots
-    for (let i = 0; i <= Math.min(maxIdx, pts.length - 1); i++) {
-      const [cx, cy] = mapToCanvas(pts[i].x, pts[i].y, p);
-      ctx.beginPath();
-      ctx.arc(cx, cy, 3, 0, Math.PI * 2);
-      ctx.fillStyle = '#000';
-      ctx.fill();
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = color;
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  function renderFrame(progress) {
-    const p = getParams();
-    drawGridAndAxes(p);
-    drawTrueSolution(p);
-
-    if (!points.length) return;
-
-    const maxIdx = Math.floor(progress);
-    const remainder = progress - maxIdx;
-
-    // Tangents (Euler only)
-    if (activeMethods.has('euler')) {
-      ctx.lineWidth = 1.5;
-      for (let i = 0; i < maxIdx; i++) {
-        const pt = points[i];
-        const [cx, cy] = mapToCanvas(pt.x, pt.y, p);
-        const extX = p.h * 0.8;
-        const [tx, ty] = mapToCanvas(pt.x + extX, pt.y + pt.slope * extX, p);
-        ctx.beginPath();
-        ctx.strokeStyle = Theme.tangent;
-        ctx.setLineDash([4, 4]);
-        ctx.moveTo(cx, cy); ctx.lineTo(tx, ty);
-        ctx.stroke();
-      }
-      ctx.setLineDash([]);
+      bar.innerHTML = html;
     }
 
-    // Comparison methods (draw first, behind Euler)
-    // 🔹 Used distinctive dashing for easier identification
-    if (activeMethods.has('rk4') && pointsRK4.length)   drawMethodPath(pointsRK4,   '#a78bfa', progress, p, [8, 4], 2.5);
-    if (activeMethods.has('heun') && pointsHeun.length)  drawMethodPath(pointsHeun,  '#3b82f6', progress, p, [4, 4], 2);
+    function drawMethodPath(pts, color, progress, p, dash = [], lineWidth = 2) {
+      if (!pts.length) return;
+      const maxIdx = Math.floor(progress);
+      const remainder = progress - maxIdx;
 
-    // Euler Path (primary, always on top)
-    if (activeMethods.has('euler')) {
       ctx.save();
-      ctx.globalAlpha = activeMethods.size > 1 ? 0.9 : 1.0; // 🔹 Keep Euler slightly more prominent
+      ctx.globalAlpha = activeMethods.size > 1 ? 0.75 : 1.0; // 🔹 Makes overlap visible
+      if (dash.length) ctx.setLineDash(dash);
+
       ctx.beginPath();
-      ctx.strokeStyle = Theme.euler;
-      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
-
-      const [startX, startY] = mapToCanvas(points[0].x, points[0].y, p);
-      ctx.moveTo(startX, startY);
-
-      for (let i = 1; i <= maxIdx; i++) {
-        const [cx, cy] = mapToCanvas(points[i].x, points[i].y, p);
+      const [sx, sy] = mapToCanvas(pts[0].x, pts[0].y, p);
+      ctx.moveTo(sx, sy);
+      for (let i = 1; i <= Math.min(maxIdx, pts.length - 1); i++) {
+        const [cx, cy] = mapToCanvas(pts[i].x, pts[i].y, p);
         ctx.lineTo(cx, cy);
       }
-
-      let lastCx = startX, lastCy = startY;
-      if (maxIdx < points.length - 1 && remainder > 0) {
-        const p1 = points[maxIdx];
-        const p2 = points[maxIdx + 1];
-        const interpX = p1.x + (p2.x - p1.x) * remainder;
-        const interpY = p1.y + (p2.y - p1.y) * remainder;
-        const [ix, iy] = mapToCanvas(interpX, interpY, p);
+      if (maxIdx < pts.length - 1 && remainder > 0) {
+        const a = pts[maxIdx], b = pts[maxIdx + 1];
+        const [ix, iy] = mapToCanvas(a.x + (b.x - a.x) * remainder, a.y + (b.y - a.y) * remainder, p);
         ctx.lineTo(ix, iy);
-        lastCx = ix; lastCy = iy;
-      } else if (maxIdx > 0) {
-        const [cx, cy] = mapToCanvas(points[maxIdx].x, points[maxIdx].y, p);
-        lastCx = cx; lastCy = cy;
       }
       ctx.stroke();
 
-      // Points
-      for (let i = 0; i <= maxIdx; i++) {
-        const [cx, cy] = mapToCanvas(points[i].x, points[i].y, p);
+      // Dots
+      for (let i = 0; i <= Math.min(maxIdx, pts.length - 1); i++) {
+        const [cx, cy] = mapToCanvas(pts[i].x, pts[i].y, p);
         ctx.beginPath();
-        ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+        ctx.arc(cx, cy, 3, 0, Math.PI * 2);
         ctx.fillStyle = '#000';
         ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = Theme.euler;
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = color;
         ctx.stroke();
       }
       ctx.restore();
-
-      // Current point glow
-      ctx.beginPath();
-      ctx.arc(lastCx, lastCy, 6, 0, Math.PI * 2);
-      ctx.fillStyle = Theme.euler;
-      ctx.shadowColor = 'rgba(255,255,255,0.8)';
-      ctx.shadowBlur = 10;
-      ctx.fill();
-      ctx.shadowBlur = 0;
     }
 
-    updateStatusBar(p, progress);
-    highlightTableRow(maxIdx);
-  }
+    function renderFrame(progress) {
+      const p = getParams();
+      drawGridAndAxes(p);
+      drawTrueSolution(p);
 
-  function animateApp() {
-    const speedRaw = parseInt(document.getElementById('speed').value);
-    const stepIncrement = 0.005 + (speedRaw / 100) * 0.15; 
+      if (!points.length) return;
 
-    if (currentAnimProgress < targetProgress) {
-      currentAnimProgress += stepIncrement;
-      if (currentAnimProgress > targetProgress) currentAnimProgress = targetProgress;
-      renderFrame(currentAnimProgress);
-      animId = requestAnimationFrame(animateApp);
-    } else {
+      const maxIdx = Math.floor(progress);
+      const remainder = progress - maxIdx;
+
+      // Tangents (Euler only)
+      if (activeMethods.has('euler')) {
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < maxIdx; i++) {
+          const pt = points[i];
+          const [cx, cy] = mapToCanvas(pt.x, pt.y, p);
+          const extX = p.h * 0.8;
+          const [tx, ty] = mapToCanvas(pt.x + extX, pt.y + pt.slope * extX, p);
+          ctx.beginPath();
+          ctx.strokeStyle = Theme.tangent;
+          ctx.setLineDash([4, 4]);
+          ctx.moveTo(cx, cy); ctx.lineTo(tx, ty);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      }
+
+      // Comparison methods (draw first, behind Euler)
+      // 🔹 Used distinctive dashing for easier identification
+      if (activeMethods.has('rk4') && pointsRK4.length) drawMethodPath(pointsRK4, '#a78bfa', progress, p, [8, 4], 2.5);
+      if (activeMethods.has('heun') && pointsHeun.length) drawMethodPath(pointsHeun, '#3b82f6', progress, p, [4, 4], 2);
+
+      // Euler Path (primary, always on top)
+      if (activeMethods.has('euler')) {
+        ctx.save();
+        ctx.globalAlpha = activeMethods.size > 1 ? 0.9 : 1.0; // 🔹 Keep Euler slightly more prominent
+        ctx.beginPath();
+        ctx.strokeStyle = Theme.euler;
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        const [startX, startY] = mapToCanvas(points[0].x, points[0].y, p);
+        ctx.moveTo(startX, startY);
+
+        for (let i = 1; i <= maxIdx; i++) {
+          const [cx, cy] = mapToCanvas(points[i].x, points[i].y, p);
+          ctx.lineTo(cx, cy);
+        }
+
+        let lastCx = startX, lastCy = startY;
+        if (maxIdx < points.length - 1 && remainder > 0) {
+          const p1 = points[maxIdx];
+          const p2 = points[maxIdx + 1];
+          const interpX = p1.x + (p2.x - p1.x) * remainder;
+          const interpY = p1.y + (p2.y - p1.y) * remainder;
+          const [ix, iy] = mapToCanvas(interpX, interpY, p);
+          ctx.lineTo(ix, iy);
+          lastCx = ix; lastCy = iy;
+        } else if (maxIdx > 0) {
+          const [cx, cy] = mapToCanvas(points[maxIdx].x, points[maxIdx].y, p);
+          lastCx = cx; lastCy = cy;
+        }
+        ctx.stroke();
+
+        // Points
+        for (let i = 0; i <= maxIdx; i++) {
+          const [cx, cy] = mapToCanvas(points[i].x, points[i].y, p);
+          ctx.beginPath();
+          ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#000';
+          ctx.fill();
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = Theme.euler;
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Current point glow
+        ctx.beginPath();
+        ctx.arc(lastCx, lastCy, 6, 0, Math.PI * 2);
+        ctx.fillStyle = Theme.euler;
+        ctx.shadowColor = 'rgba(255,255,255,0.8)';
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      updateStatusBar(p, progress);
+      highlightTableRow(maxIdx);
+    }
+
+    function animateApp() {
+      const speedRaw = parseInt(document.getElementById('speed').value);
+      const stepIncrement = 0.005 + (speedRaw / 100) * 0.15;
+
+      if (currentAnimProgress < targetProgress) {
+        currentAnimProgress += stepIncrement;
+        if (currentAnimProgress > targetProgress) currentAnimProgress = targetProgress;
+        renderFrame(currentAnimProgress);
+        animId = requestAnimationFrame(animateApp);
+      } else {
+        cancelAnimationFrame(animId);
+      }
+    }
+
+    function checkStability(p) {
+      const warn = document.getElementById('stabilityWarn');
+      // Heuristic: if h > 1 or h*n > 20 or h is unusually large relative to range
+      const unstable = p.h > 1.0 || (p.h * p.n) > 30;
+      warn.style.display = unstable ? 'block' : 'none';
+    }
+
+    function initMath() {
+      const p = getParams();
+      document.getElementById('error-msg').innerText = '';
+
+      try { compiledF = math.compile(p.expr); }
+      catch (e) { document.getElementById('error-msg').innerText = 'Syntax Error in f(x, y)'; return false; }
+
+      try { compiledTrue = p.trueExpr ? math.compile(p.trueExpr) : null; }
+      catch (e) { compiledTrue = null; }
+
+      points = calculatePoints(p);
+      pointsHeun = calculateHeun(p);
+      pointsRK4 = calculateRK4(p);
+
+      checkStability(p);
+      return true;
+    }
+
+    document.getElementById('btnStep').addEventListener('click', () => {
       cancelAnimationFrame(animId);
-    }
-  }
+      if (points.length === 0) {
+        if (!initMath()) return;
+        currentAnimProgress = 0;
+        targetProgress = 0;
+        buildDataTable();
+      }
+      if (targetProgress < points.length - 1) {
+        targetProgress = Math.floor(targetProgress) + 1;
+        animateApp();
+      }
+    });
 
-  function checkStability(p) {
-    const warn = document.getElementById('stabilityWarn');
-    // Heuristic: if h > 1 or h*n > 20 or h is unusually large relative to range
-    const unstable = p.h > 1.0 || (p.h * p.n) > 30;
-    warn.style.display = unstable ? 'block' : 'none';
-  }
-
-  function initMath() {
-    const p = getParams();
-    document.getElementById('error-msg').innerText = '';
-    
-    try { compiledF = math.compile(p.expr); } 
-    catch(e) { document.getElementById('error-msg').innerText = 'Syntax Error in f(x, y)'; return false; }
-    
-    try { compiledTrue = p.trueExpr ? math.compile(p.trueExpr) : null; } 
-    catch(e) { compiledTrue = null; }
-    
-    points     = calculatePoints(p);
-    pointsHeun = calculateHeun(p);
-    pointsRK4  = calculateRK4(p);
-
-    checkStability(p);
-    return true;
-  }
-
-  document.getElementById('btnStep').addEventListener('click', () => {
-    cancelAnimationFrame(animId);
-    if (points.length === 0) {
-      if (!initMath()) return;
+    document.getElementById('btnReset').addEventListener('click', () => {
+      cancelAnimationFrame(animId);
+      points = []; pointsHeun = []; pointsRK4 = [];
       currentAnimProgress = 0;
       targetProgress = 0;
-      buildDataTable();
+      lockedTooltipIdx = null;
+      resetZoom();
+      document.getElementById('error-msg').innerText = '';
+      document.getElementById('stabilityWarn').style.display = 'none';
+      document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#333">Run the simulation to populate the table.</td></tr>';
+      renderFrame(0);
+    });
+
+    document.getElementById('btnResetZoom').addEventListener('click', resetZoom);
+
+    document.getElementById('btnDefault').addEventListener('click', () => {
+      document.getElementById('fxy').value = "x + 2*y";
+      document.getElementById('ftrue').value = "-0.5*x - 0.25 + 0.25*exp(2*x)";
+      document.getElementById('x0').value = "0";
+      document.getElementById('y0').value = "0";
+      document.getElementById('h').value = "0.25";
+      document.getElementById('n').value = "8";
+      document.getElementById('xend').value = "2";
+      document.getElementById('yrange').value = "5";
+      document.getElementById('speed').value = "70";
+      document.getElementById('btnReset').click();
+      document.getElementById('btnRun').click();
+    });
+
+    /* ══ DATA TABLE ══════════════════════════════════════════ */
+    function errClass(err) {
+      if (isNaN(err) || !isFinite(err)) return '';
+      if (err < 0.01) return 'err-low';
+      if (err < 0.5) return 'err-mid';
+      return 'err-high';
     }
-    if (targetProgress < points.length - 1) {
-      targetProgress = Math.floor(targetProgress) + 1;
-      animateApp();
-    }
-  });
 
-  document.getElementById('btnReset').addEventListener('click', () => {
-    cancelAnimationFrame(animId);
-    points = []; pointsHeun = []; pointsRK4 = [];
-    currentAnimProgress = 0;
-    targetProgress = 0;
-    lockedTooltipIdx = null;
-    resetZoom();
-    document.getElementById('error-msg').innerText = '';
-    document.getElementById('stabilityWarn').style.display = 'none';
-    document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#333">Run the simulation to populate the table.</td></tr>';
-    renderFrame(0);
-  });
+    function buildDataTable() {
+      const p = getParams();
+      const tbody = document.getElementById('dataTableBody');
+      if (!points.length) return;
 
-  document.getElementById('btnResetZoom').addEventListener('click', resetZoom);
-
-  document.getElementById('btnDefault').addEventListener('click', () => {
-    document.getElementById('fxy').value = "x + 2*y";
-    document.getElementById('ftrue').value = "-0.5*x - 0.25 + 0.25*exp(2*x)";
-    document.getElementById('x0').value = "0";
-    document.getElementById('y0').value = "0";
-    document.getElementById('h').value = "0.25";
-    document.getElementById('n').value = "8";
-    document.getElementById('xend').value = "2";
-    document.getElementById('yrange').value = "5";
-    document.getElementById('speed').value = "70";
-    document.getElementById('btnReset').click();
-    document.getElementById('btnRun').click();
-  });
-
-  /* ══ DATA TABLE ══════════════════════════════════════════ */
-  function errClass(err) {
-    if (isNaN(err) || !isFinite(err)) return '';
-    if (err < 0.01) return 'err-low';
-    if (err < 0.5)  return 'err-mid';
-    return 'err-high';
-  }
-
-  function buildDataTable() {
-    const p = getParams();
-    const tbody = document.getElementById('dataTableBody');
-    if (!points.length) return;
-
-    let html = '';
-    const maxRows = 15;
-    for (let i = 0; i < points.length; i++) {
-      if (points.length > maxRows && i > 5 && i < points.length - 5) {
-        if (i === 6) {
-          html += `<tr class="skipped-row"><td colspan="10" style="text-align:center; color: var(--text-muted); opacity: 0.5;">... showing only first and last few points to avoid clutter ...</td></tr>`;
+      let html = '';
+      const maxRows = 15;
+      for (let i = 0; i < points.length; i++) {
+        if (points.length > maxRows && i > 5 && i < points.length - 5) {
+          if (i === 6) {
+            html += `<tr class="skipped-row"><td colspan="10" style="text-align:center; color: var(--text-muted); opacity: 0.5;">... showing only first and last few points to avoid clutter ...</td></tr>`;
+          }
+          continue;
         }
-        continue;
-      }
-      const pt   = points[i];
-      const ptH  = pointsHeun[i];
-      const ptR  = pointsRK4[i];
-      const exact = evaluateExact(pt.x);
-      const hasExact = !isNaN(exact) && isFinite(exact);
+        const pt = points[i];
+        const ptH = pointsHeun[i];
+        const ptR = pointsRK4[i];
+        const exact = evaluateExact(pt.x);
+        const hasExact = !isNaN(exact) && isFinite(exact);
 
-      const errE = hasExact ? Math.abs(pt.y   - exact) : NaN;
-      const errH = hasExact ? Math.abs(ptH.y  - exact) : NaN;
-      const errR = hasExact ? Math.abs(ptR.y  - exact) : NaN;
+        const errE = hasExact ? Math.abs(pt.y - exact) : NaN;
+        const errH = hasExact ? Math.abs(ptH.y - exact) : NaN;
+        const errR = hasExact ? Math.abs(ptR.y - exact) : NaN;
 
-      html += `<tr data-row="${i}">
+        html += `<tr data-row="${i}">
         <td class="step-num">${i}</td>
         <td>${pt.x.toFixed(4)}</td>
         <td class="y-euler">${pt.y.toFixed(6)}</td>
@@ -1585,106 +1809,106 @@
         <td class="${errClass(errH)}">${isFinite(errH) ? errH.toFixed(6) : '—'}</td>
         <td class="${errClass(errR)}">${isFinite(errR) ? errR.toFixed(6) : '—'}</td>
       </tr>`;
+      }
+      tbody.innerHTML = html;
+
+      // Math explanation panel
+      updateMathPanel(p);
     }
-    tbody.innerHTML = html;
 
-    // Math explanation panel
-    updateMathPanel(p);
-  }
-
-  function highlightTableRow(idx) {
-    const tbody = document.getElementById('dataTableBody');
-    const rows = tbody.querySelectorAll('tr[data-row]');
-    rows.forEach(r => r.classList.remove('active-row'));
-    const target = tbody.querySelector(`tr[data-row="${idx}"]`);
-    if (target) {
-      target.classList.add('active-row');
-      // scroll only the wrapper box, not the entire browser window
-      const wrapper = target.closest('.table-wrapper');
-      if (wrapper) {
-        wrapper.scrollTo({
-          top: target.offsetTop - wrapper.clientHeight/2 + target.clientHeight/2,
-          behavior: 'smooth'
-        });
+    function highlightTableRow(idx) {
+      const tbody = document.getElementById('dataTableBody');
+      const rows = tbody.querySelectorAll('tr[data-row]');
+      rows.forEach(r => r.classList.remove('active-row'));
+      const target = tbody.querySelector(`tr[data-row="${idx}"]`);
+      if (target) {
+        target.classList.add('active-row');
+        // scroll only the wrapper box, not the entire browser window
+        const wrapper = target.closest('.table-wrapper');
+        if (wrapper) {
+          wrapper.scrollTo({
+            top: target.offsetTop - wrapper.clientHeight / 2 + target.clientHeight / 2,
+            behavior: 'smooth'
+          });
+        }
       }
     }
-  }
 
-  /* ══ MATH EXPLANATION PANEL ══════════════════════════════ */
-  function updateMathPanel(p) {
-    const panel = document.getElementById('mathInsight');
-    if (!points.length) { panel.textContent = 'Run to see accuracy feedback.'; panel.className='insight'; return; }
+    /* ══ MATH EXPLANATION PANEL ══════════════════════════════ */
+    function updateMathPanel(p) {
+      const panel = document.getElementById('mathInsight');
+      if (!points.length) { panel.textContent = 'Run to see accuracy feedback.'; panel.className = 'insight'; return; }
 
-    let maxErrE = 0;
-    for (let i = 0; i < points.length; i++) {
-      const ex = evaluateExact(points[i].x);
-      if (isFinite(ex)) maxErrE = Math.max(maxErrE, Math.abs(points[i].y - ex));
-    }
-    const hasExact = isFinite(maxErrE) && compiledTrue;
+      let maxErrE = 0;
+      for (let i = 0; i < points.length; i++) {
+        const ex = evaluateExact(points[i].x);
+        if (isFinite(ex)) maxErrE = Math.max(maxErrE, Math.abs(points[i].y - ex));
+      }
+      const hasExact = isFinite(maxErrE) && compiledTrue;
 
-    let msg = '', cls = 'insight';
-    if (p.h > 1.0) {
-      msg = `⚠ h = ${p.h} is large. Euler's linear tangent diverges rapidly. Try h < 0.5 for stability.`;
-      cls = 'insight warn';
-    } else if (hasExact && maxErrE > 0.5) {
-      msg = `Max Euler error ≈ ${maxErrE.toFixed(4)}. The step size h = ${p.h} introduces significant drift. Reduce h or switch to RK4.`;
-      cls = 'insight warn';
-    } else if (hasExact && maxErrE < 0.01) {
-      msg = `✓ Excellent accuracy — max error ≈ ${maxErrE.toFixed(5)}. Step size h = ${p.h} is well-chosen.`;
-      cls = 'insight good';
-    } else if (hasExact) {
-      msg = `Moderate accuracy — max error ≈ ${maxErrE.toFixed(4)}. Compare methods below. Heun's and RK4 will be notably more accurate.`;
-    } else {
-      msg = `No exact solution provided. Method comparison still visible in the table.`;
-    }
-    panel.textContent = msg;
-    panel.className = cls;
-  }
-
-  /* ══ METHOD TOGGLE BUTTONS ══════════════════════════════ */
-  document.querySelectorAll('.method-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const m = btn.dataset.method;
-      if (activeMethods.has(m)) {
-        if (activeMethods.size === 1) return; // always keep at least one
-        activeMethods.delete(m);
-        btn.classList.remove(`active-${m}`);
+      let msg = '', cls = 'insight';
+      if (p.h > 1.0) {
+        msg = `⚠ h = ${p.h} is large. Euler's linear tangent diverges rapidly. Try h < 0.5 for stability.`;
+        cls = 'insight warn';
+      } else if (hasExact && maxErrE > 0.5) {
+        msg = `Max Euler error ≈ ${maxErrE.toFixed(4)}. The step size h = ${p.h} introduces significant drift. Reduce h or switch to RK4.`;
+        cls = 'insight warn';
+      } else if (hasExact && maxErrE < 0.01) {
+        msg = `✓ Excellent accuracy — max error ≈ ${maxErrE.toFixed(5)}. Step size h = ${p.h} is well-chosen.`;
+        cls = 'insight good';
+      } else if (hasExact) {
+        msg = `Moderate accuracy — max error ≈ ${maxErrE.toFixed(4)}. Compare methods below. Heun's and RK4 will be notably more accurate.`;
       } else {
-        activeMethods.add(m);
-        btn.classList.add(`active-${m}`);
+        msg = `No exact solution provided. Method comparison still visible in the table.`;
       }
-      renderFrame(currentAnimProgress);
-    });
-  });
+      panel.textContent = msg;
+      panel.className = cls;
+    }
 
-  /* ══ CANVAS TOOLTIP ══════════════════════════════════════ */
-  const tooltip = document.getElementById('canvasTooltip');
-
-  function getHoveredPoint(canvasX, canvasY, p) {
-    let best = null, bestDist = 18;
-    const checkSet = (pts, label, color) => {
-      pts.forEach((pt, i) => {
-        const [cx, cy] = mapToCanvas(pt.x, pt.y, p);
-        const d = Math.hypot(canvasX - cx, canvasY - cy);
-        if (d < bestDist) { bestDist = d; best = { pt, i, label, color }; }
+    /* ══ METHOD TOGGLE BUTTONS ══════════════════════════════ */
+    document.querySelectorAll('.method-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const m = btn.dataset.method;
+        if (activeMethods.has(m)) {
+          if (activeMethods.size === 1) return; // always keep at least one
+          activeMethods.delete(m);
+          btn.classList.remove(`active-${m}`);
+        } else {
+          activeMethods.add(m);
+          btn.classList.add(`active-${m}`);
+        }
+        renderFrame(currentAnimProgress);
       });
-    };
-    if (activeMethods.has('euler') && points.length)     checkSet(points,     'Euler', '#fff');
-    if (activeMethods.has('heun')  && pointsHeun.length) checkSet(pointsHeun, "Heun's", '#3b82f6');
-    if (activeMethods.has('rk4')   && pointsRK4.length)  checkSet(pointsRK4,  'RK4',   '#a78bfa');
-    return best;
-  }
+    });
 
-  function showTooltip(info, screenX, screenY) {
-    if (!info) { if (!lockedTooltipIdx) tooltip.style.display = 'none'; return; }
-    const p = getParams();
-    const exact = evaluateExact(info.pt.x);
-    const hasExact = isFinite(exact);
-    const err = hasExact ? Math.abs(info.pt.y - exact) : NaN;
-    const ec = errClass(err);
-    const ecCls = ec ? `tt-${ec}` : 'tt-val';
+    /* ══ CANVAS TOOLTIP ══════════════════════════════════════ */
+    const tooltip = document.getElementById('canvasTooltip');
 
-    tooltip.innerHTML = `
+    function getHoveredPoint(canvasX, canvasY, p) {
+      let best = null, bestDist = 18;
+      const checkSet = (pts, label, color) => {
+        pts.forEach((pt, i) => {
+          const [cx, cy] = mapToCanvas(pt.x, pt.y, p);
+          const d = Math.hypot(canvasX - cx, canvasY - cy);
+          if (d < bestDist) { bestDist = d; best = { pt, i, label, color }; }
+        });
+      };
+      if (activeMethods.has('euler') && points.length) checkSet(points, 'Euler', '#fff');
+      if (activeMethods.has('heun') && pointsHeun.length) checkSet(pointsHeun, "Heun's", '#3b82f6');
+      if (activeMethods.has('rk4') && pointsRK4.length) checkSet(pointsRK4, 'RK4', '#a78bfa');
+      return best;
+    }
+
+    function showTooltip(info, screenX, screenY) {
+      if (!info) { if (!lockedTooltipIdx) tooltip.style.display = 'none'; return; }
+      const p = getParams();
+      const exact = evaluateExact(info.pt.x);
+      const hasExact = isFinite(exact);
+      const err = hasExact ? Math.abs(info.pt.y - exact) : NaN;
+      const ec = errClass(err);
+      const ecCls = ec ? `tt-${ec}` : 'tt-val';
+
+      tooltip.innerHTML = `
       <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:${info.color};margin-bottom:6px">
         ● ${info.label} — Step ${info.i}
       </div>
@@ -1695,190 +1919,191 @@
       <div class="tt-row"><span class="tt-label">error</span><span class="${ecCls}">${err.toFixed(6)}</span></div>` : ''}
       ${lockedTooltipIdx !== null ? '<div style="font-size:8.5px;color:#444;margin-top:6px">Click again to unlock</div>' : '<div style="font-size:8.5px;color:#444;margin-top:4px">Click to lock</div>'}
     `;
-    tooltip.style.display = 'block';
-    tooltip.style.left = (screenX + 14) + 'px';
-    tooltip.style.top  = (screenY - 10) + 'px';
-  }
-
-  appCanvas.addEventListener('mousemove', (e) => {
-    if (lockedTooltipIdx !== null) return;
-    const rect = appCanvas.getBoundingClientRect();
-    const cx = (e.clientX - rect.left) * (appCanvas.width  / rect.width);
-    const cy = (e.clientY - rect.top)  * (appCanvas.height / rect.height);
-    const p = getParams();
-    const info = getHoveredPoint(cx, cy, p);
-    if (info && Math.floor(currentAnimProgress) >= info.i) {
-      showTooltip(info, e.clientX, e.clientY);
-    } else {
-      tooltip.style.display = 'none';
+      tooltip.style.display = 'block';
+      tooltip.style.left = (screenX + 14) + 'px';
+      tooltip.style.top = (screenY - 10) + 'px';
     }
-  });
 
-  appCanvas.addEventListener('mouseleave', () => {
-    if (!lockedTooltipIdx) tooltip.style.display = 'none';
-  });
+    appCanvas.addEventListener('mousemove', (e) => {
+      if (lockedTooltipIdx !== null) return;
+      const rect = appCanvas.getBoundingClientRect();
+      const cx = (e.clientX - rect.left) * (appCanvas.width / rect.width);
+      const cy = (e.clientY - rect.top) * (appCanvas.height / rect.height);
+      const p = getParams();
+      const info = getHoveredPoint(cx, cy, p);
+      if (info && Math.floor(currentAnimProgress) >= info.i) {
+        showTooltip(info, e.clientX, e.clientY);
+      } else {
+        tooltip.style.display = 'none';
+      }
+    });
 
-  appCanvas.addEventListener('click', (e) => {
-    const rect = appCanvas.getBoundingClientRect();
-    const cx = (e.clientX - rect.left) * (appCanvas.width  / rect.width);
-    const cy = (e.clientY - rect.top)  * (appCanvas.height / rect.height);
-    const p = getParams();
-    const info = getHoveredPoint(cx, cy, p);
+    appCanvas.addEventListener('mouseleave', () => {
+      if (!lockedTooltipIdx) tooltip.style.display = 'none';
+    });
 
-    if (info && Math.floor(currentAnimProgress) >= info.i) {
-      if (lockedTooltipIdx !== null) {
+    appCanvas.addEventListener('click', (e) => {
+      const rect = appCanvas.getBoundingClientRect();
+      const cx = (e.clientX - rect.left) * (appCanvas.width / rect.width);
+      const cy = (e.clientY - rect.top) * (appCanvas.height / rect.height);
+      const p = getParams();
+      const info = getHoveredPoint(cx, cy, p);
+
+      if (info && Math.floor(currentAnimProgress) >= info.i) {
+        if (lockedTooltipIdx !== null) {
+          lockedTooltipIdx = null;
+          tooltip.style.display = 'none';
+        } else {
+          lockedTooltipIdx = info.i;
+          showTooltip(info, e.clientX, e.clientY);
+        }
+      } else {
         lockedTooltipIdx = null;
         tooltip.style.display = 'none';
-      } else {
-        lockedTooltipIdx = info.i;
-        showTooltip(info, e.clientX, e.clientY);
       }
-    } else {
-      lockedTooltipIdx = null;
-      tooltip.style.display = 'none';
-    }
-  });
+    });
 
-  /* ══ EQUATION PRESETS ════════════════════════════════════ */
-  const PRESETS = [
-    {
-      name: 'Linear ODE',
-      eq: 'x + y',
-      true: 'exp(x) - x - 1',
-      x0: 0, y0: 0, h: 0.2, n: 10, xend: 2, yrange: 5,
-      desc: 'dy/dx = x + y — classical first-order'
-    },
-    {
-      name: 'Exp Growth',
-      eq: 'y',
-      true: 'exp(x)',
-      x0: 0, y0: 1, h: 0.2, n: 10, xend: 2, yrange: 8,
-      desc: 'dy/dx = y → y = eˣ'
-    },
-    {
-      name: 'Logistic',
-      eq: 'y*(1 - y)',
-      true: '1/(1+exp(-x))',
-      x0: 0, y0: 0.5, h: 0.25, n: 12, xend: 3, yrange: 1.5,
-      desc: 'S-curve population model'
-    },
-    {
-      name: 'Free Fall',
-      eq: '-9.81',
-      true: '-9.81*x + 10',
-      x0: 0, y0: 10, h: 0.1, n: 15, xend: 1.5, yrange: 15,
-      desc: 'dv/dt = −g, free fall velocity'
-    },
-    {
-      name: 'Decay',
-      eq: '-y',
-      true: 'exp(-x)',
-      x0: 0, y0: 1, h: 0.2, n: 12, xend: 3, yrange: 1.5,
-      desc: 'dy/dx = −y → exponential decay'
-    },
-    {
-      name: 'Harmonic',
-      eq: '-x',
-      true: 'cos(x)',
-      x0: 0, y0: 1, h: 0.2, n: 16, xend: 3.2, yrange: 2,
-      desc: 'Oscillation — cosine solution'
-    },
-    {
-      name: 'Bernoulli',
-      eq: 'y - y^2',
-      true: '1/(1+exp(-x))',
-      x0: 0, y0: 0.5, h: 0.15, n: 20, xend: 3, yrange: 1.5,
-      desc: 'Nonlinear Bernoulli ODE'
-    },
-    {
-      name: 'Stiff ODE',
-      eq: '-10*y',
-      true: 'exp(-10*x)',
-      x0: 0, y0: 1, h: 0.05, n: 20, xend: 1, yrange: 1.2,
-      desc: 'Stiff — needs small h for stability'
-    },
-    {
-      name: 'van der Pol',
-      eq: '(1-y^2)*y - x',
-      true: '',
-      x0: 0, y0: 0.5, h: 0.1, n: 30, xend: 3, yrange: 3,
-      desc: 'Nonlinear oscillator (no closed form)'
-    },
-    {
-      name: 'Euler e^(ix)',
-      eq: '-y',
-      true: 'cos(x)',
-      x0: 0, y0: 1, h: 0.15, n: 20, xend: 6.3, yrange: 2,
-      desc: 'Re(e^ix) — Euler\'s formula in action'
-    },
-  ];
+    /* ══ EQUATION PRESETS ════════════════════════════════════ */
+    const PRESETS = [
+      {
+        name: 'Linear ODE',
+        eq: 'x + y',
+        true: 'exp(x) - x - 1',
+        x0: 0, y0: 0, h: 0.2, n: 10, xend: 2, yrange: 5,
+        desc: 'dy/dx = x + y — classical first-order'
+      },
+      {
+        name: 'Exp Growth',
+        eq: 'y',
+        true: 'exp(x)',
+        x0: 0, y0: 1, h: 0.2, n: 10, xend: 2, yrange: 8,
+        desc: 'dy/dx = y → y = eˣ'
+      },
+      {
+        name: 'Logistic',
+        eq: 'y*(1 - y)',
+        true: '1/(1+exp(-x))',
+        x0: 0, y0: 0.5, h: 0.25, n: 12, xend: 3, yrange: 1.5,
+        desc: 'S-curve population model'
+      },
+      {
+        name: 'Free Fall',
+        eq: '-9.81',
+        true: '-9.81*x + 10',
+        x0: 0, y0: 10, h: 0.1, n: 15, xend: 1.5, yrange: 15,
+        desc: 'dv/dt = −g, free fall velocity'
+      },
+      {
+        name: 'Decay',
+        eq: '-y',
+        true: 'exp(-x)',
+        x0: 0, y0: 1, h: 0.2, n: 12, xend: 3, yrange: 1.5,
+        desc: 'dy/dx = −y → exponential decay'
+      },
+      {
+        name: 'Harmonic',
+        eq: '-x',
+        true: 'cos(x)',
+        x0: 0, y0: 1, h: 0.2, n: 16, xend: 3.2, yrange: 2,
+        desc: 'Oscillation — cosine solution'
+      },
+      {
+        name: 'Bernoulli',
+        eq: 'y - y^2',
+        true: '1/(1+exp(-x))',
+        x0: 0, y0: 0.5, h: 0.15, n: 20, xend: 3, yrange: 1.5,
+        desc: 'Nonlinear Bernoulli ODE'
+      },
+      {
+        name: 'Stiff ODE',
+        eq: '-10*y',
+        true: 'exp(-10*x)',
+        x0: 0, y0: 1, h: 0.05, n: 20, xend: 1, yrange: 1.2,
+        desc: 'Stiff — needs small h for stability'
+      },
+      {
+        name: 'van der Pol',
+        eq: '(1-y^2)*y - x',
+        true: '',
+        x0: 0, y0: 0.5, h: 0.1, n: 30, xend: 3, yrange: 3,
+        desc: 'Nonlinear oscillator (no closed form)'
+      },
+      {
+        name: 'Euler e^(ix)',
+        eq: '-y',
+        true: 'cos(x)',
+        x0: 0, y0: 1, h: 0.15, n: 20, xend: 6.3, yrange: 2,
+        desc: 'Re(e^ix) — Euler\'s formula in action'
+      },
+    ];
 
-  function renderPresets() {
-    const grid = document.getElementById('presetsGrid');
-    grid.innerHTML = '';
-    PRESETS.forEach((preset, idx) => {
-      const btn = document.createElement('button');
-      btn.className = 'preset-btn';
-      btn.innerHTML = `<span class="preset-name">${preset.name}</span>
+    function renderPresets() {
+      const grid = document.getElementById('presetsGrid');
+      grid.innerHTML = '';
+      PRESETS.forEach((preset, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'preset-btn';
+        btn.innerHTML = `<span class="preset-name">${preset.name}</span>
         <span class="preset-eq">f = ${preset.eq}</span>
         <span class="preset-desc">${preset.desc}</span>`;
-      btn.addEventListener('click', () => applyPreset(idx));
-      grid.appendChild(btn);
+        btn.addEventListener('click', () => applyPreset(idx));
+        grid.appendChild(btn);
+      });
+    }
+
+    function applyPreset(idx) {
+      const pr = PRESETS[idx];
+      document.getElementById('fxy').value = pr.eq;
+      document.getElementById('ftrue').value = pr.true;
+      document.getElementById('x0').value = pr.x0;
+      document.getElementById('y0').value = pr.y0;
+      document.getElementById('h').value = pr.h;
+      document.getElementById('n').value = pr.n;
+      document.getElementById('xend').value = pr.xend;
+      document.getElementById('yrange').value = pr.yrange;
+      document.getElementById('btnReset').click();
+      document.getElementById('btnRun').click();
+    }
+
+    renderPresets();
+
+    /* ══ WIRE RUN / STEP to table ════════════════════════════ */
+    // Patch Run button to also build table after animation completes
+    const origRun = document.getElementById('btnRun');
+    origRun.addEventListener('click', () => {
+      cancelAnimationFrame(animId);
+      if (!initMath()) return;
+      resetZoom();
+      currentAnimProgress = 0;
+      targetProgress = points.length - 1;
+
+      function runAndTable() {
+        const speedRaw = parseInt(document.getElementById('speed').value);
+        const stepIncrement = 0.005 + (speedRaw / 100) * 0.15;
+        if (currentAnimProgress < targetProgress) {
+          currentAnimProgress += stepIncrement;
+          if (currentAnimProgress > targetProgress) currentAnimProgress = targetProgress;
+          renderFrame(currentAnimProgress);
+          animId = requestAnimationFrame(runAndTable);
+        } else {
+          cancelAnimationFrame(animId);
+          buildDataTable();
+        }
+      }
+      animId = requestAnimationFrame(runAndTable);
     });
-  }
 
-  function applyPreset(idx) {
-    const pr = PRESETS[idx];
-    document.getElementById('fxy').value   = pr.eq;
-    document.getElementById('ftrue').value = pr.true;
-    document.getElementById('x0').value    = pr.x0;
-    document.getElementById('y0').value    = pr.y0;
-    document.getElementById('h').value     = pr.h;
-    document.getElementById('n').value     = pr.n;
-    document.getElementById('xend').value  = pr.xend;
-    document.getElementById('yrange').value = pr.yrange;
-    document.getElementById('btnReset').click();
-    document.getElementById('btnRun').click();
-  }
-
-  renderPresets();
-
-  /* ══ WIRE RUN / STEP to table ════════════════════════════ */
-  // Patch Run button to also build table after animation completes
-  const origRun = document.getElementById('btnRun');
-  origRun.addEventListener('click', () => {
-    cancelAnimationFrame(animId);
-    if (!initMath()) return;
-    resetZoom();
-    currentAnimProgress = 0;
-    targetProgress = points.length - 1;
-
-    function runAndTable() {
-      const speedRaw = parseInt(document.getElementById('speed').value);
-      const stepIncrement = 0.005 + (speedRaw / 100) * 0.15;
-      if (currentAnimProgress < targetProgress) {
-        currentAnimProgress += stepIncrement;
-        if (currentAnimProgress > targetProgress) currentAnimProgress = targetProgress;
+    setTimeout(() => {
+      resizeAppCanvas();
+      if (initMath()) {
+        targetProgress = points.length - 1;
+        currentAnimProgress = targetProgress;
         renderFrame(currentAnimProgress);
-        animId = requestAnimationFrame(runAndTable);
-      } else {
-        cancelAnimationFrame(animId);
         buildDataTable();
       }
-    }
-    animId = requestAnimationFrame(runAndTable);
-  });
+    }, 100);
 
-  setTimeout(() => {
-    resizeAppCanvas();
-    if (initMath()) {
-      targetProgress = points.length - 1;
-      currentAnimProgress = targetProgress;
-      renderFrame(currentAnimProgress);
-      buildDataTable();
-    }
-  }, 100);
-
-</script>
+  </script>
 </body>
+
 </html>
