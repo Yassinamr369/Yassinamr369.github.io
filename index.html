@@ -44,6 +44,29 @@
     overflow-x: hidden;
   }
 
+  
+  /* ─── VERSION BANNER ───────────────────── */
+  .version-banner {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: var(--accent-blue);
+    color: #fff;
+    text-align: center;
+    padding: 10px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    z-index: 9999;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  }
+  .version-banner a {
+    color: #fff;
+    text-decoration: underline;
+    margin-left: 15px;
+  }
+  .version-banner a:hover {
+    color: #e2e8f0;
+  }
   /* ─── SCROLLBAR ───────────────────────── */
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-track { background: var(--bg-base); }
@@ -514,6 +537,11 @@
 </head>
 <body>
 
+<div class="version-banner">
+  Version 1 (Single Method View) | <a href="index%20copy.html">View Version 2 (Multi-Method View)</a>
+</div>
+
+
 <section id="hero">
   <canvas id="hero-canvas"></canvas>
   
@@ -586,6 +614,7 @@
         <button class="btn-primary" id="btnRun">Execute</button>
         <button class="btn-secondary" id="btnStep">Step</button>
         <button class="btn-secondary" id="btnReset">Clear</button>
+        <button class="btn-secondary" id="btnResetZoom" title="Reset Zoom and Panning position">Reset View</button>
         <button class="btn-secondary full-width" id="btnDefault">Default</button>
       </div>
     </aside>
@@ -1192,7 +1221,7 @@
     }
     ctx.setLineDash([]);
 
-    // Euler Path
+    // Method Path
     ctx.beginPath();
     ctx.strokeStyle = p.method === 'rk4' ? Theme.rk4 : p.method === 'heun' ? Theme.heun : Theme.euler;
     ctx.lineWidth = 2.5;
@@ -1307,6 +1336,8 @@
     document.getElementById('error-msg').innerText = '';
     renderFrame(0);
   });
+
+  document.getElementById('btnResetZoom').addEventListener('click', resetZoom);
 
   document.getElementById('btnDefault').addEventListener('click', () => {
     document.getElementById('fxy').value = "x + 2*y";
