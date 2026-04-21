@@ -916,6 +916,289 @@
     #canvasTooltip .tt-err-high {
       color: #ef4444;
     }
+
+    /* ─── METHOD EXPLAINER SECTION ───────────── */
+    #method-explainer {
+      width: 100%;
+      background: linear-gradient(180deg, #080808 0%, #060606 100%);
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+      padding: 80px 5%;
+    }
+
+    .me-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 50px;
+    }
+
+    .me-heading-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .me-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border: 1px solid #2a2a2a;
+      padding: 6px 14px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .me-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      letter-spacing: -2px;
+      line-height: 1;
+      background: linear-gradient(160deg, #ffffff 30%, #555 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .me-subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+
+    .me-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .me-card {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid #1f1f1f;
+      border-radius: 20px;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .me-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .me-card--euler::before {
+      background: linear-gradient(90deg, #fff, transparent);
+    }
+
+    .me-card--heun::before {
+      background: linear-gradient(90deg, #3b82f6, transparent);
+    }
+
+    .me-card--rk4::before {
+      background: linear-gradient(90deg, #a78bfa, transparent);
+    }
+
+    .me-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .me-card--euler:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 20px 40px rgba(255, 255, 255, 0.04);
+    }
+
+    .me-card--heun:hover {
+      border-color: rgba(59, 130, 246, 0.4);
+      box-shadow: 0 20px 40px rgba(59, 130, 246, 0.08);
+    }
+
+    .me-card--rk4:hover {
+      border-color: rgba(167, 139, 250, 0.4);
+      box-shadow: 0 20px 40px rgba(167, 139, 250, 0.08);
+    }
+
+    .me-card:hover::before {
+      opacity: 1;
+    }
+
+    .me-card-icon {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      letter-spacing: -2px;
+      line-height: 1;
+      color: #222;
+      margin-bottom: 4px;
+    }
+
+    .me-card-label {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      letter-spacing: -0.5px;
+    }
+
+    .me-card-name {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+    }
+
+    .me-card-desc {
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: #888;
+      flex: 1;
+      margin-top: 6px;
+    }
+
+    .me-card-badge {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: 6px;
+      width: fit-content;
+      margin-top: 6px;
+    }
+
+    .me-badge--euler {
+      background: rgba(255, 255, 255, 0.07);
+      color: #ccc;
+      border: 1px solid #2a2a2a;
+    }
+
+    .me-badge--heun {
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .me-badge--rk4 {
+      background: rgba(167, 139, 250, 0.1);
+      color: #a78bfa;
+      border: 1px solid rgba(167, 139, 250, 0.25);
+    }
+
+    /* Formula + Insight Row */
+    .me-formula-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .me-formula-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid #1f1f1f;
+      border-radius: 16px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .me-formula-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+    }
+
+    .me-formula-main {
+      font-family: var(--font-mono);
+      font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+      font-weight: 700;
+      color: #e2e8f0;
+      letter-spacing: 0.02em;
+      line-height: 1.4;
+    }
+
+    .me-formula-note {
+      font-size: 0.82rem;
+      color: #555;
+      line-height: 1.6;
+      border-top: 1px solid #1a1a1a;
+      padding-top: 10px;
+      margin-top: 4px;
+    }
+
+    .me-insight-box {
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid #1f1f1f;
+      border-radius: 16px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .me-insight-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+    }
+
+    .me-insight-box .insight {
+      font-size: 0.88rem;
+      color: #4a5568;
+      border: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .me-insight-box .insight.warn {
+      color: #c05621;
+    }
+
+    .me-insight-box .insight.good {
+      color: #276749;
+    }
+
+    @media (max-width: 900px) {
+      .me-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .me-formula-row {
+        grid-template-columns: 1fr;
+      }
+
+      #method-explainer {
+        padding: 60px 5%;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .me-title {
+        font-size: clamp(1.6rem, 8vw, 2.4rem);
+      }
+
+      .me-card {
+        padding: 24px 20px;
+      }
+    }
   </style>
 </head>
 
@@ -987,35 +1270,13 @@
                 class="info-icon">ℹ️</span></button>
           </div>
 
-          <details class="method-details">
-            <summary>Learn More about Methods</summary>
-            <div class="details-content">
-              <p><strong>Euler Method (Basic)</strong>This method moves step by step using the slope at the current
-                point. It is simple and fast, but not very accurate because it only looks at one direction.</p>
-              <p><strong>Heun Method (Improved Euler)</strong>This method improves Euler by checking the slope at the
-                start and the end of the step, then taking the average. This makes it more accurate than Euler.</p>
-              <p><strong>Runge-Kutta 4 (RK4)</strong>This method calculates the slope four times in each step and
-                combines them. It is much more accurate and widely used in engineering and physics.</p>
 
-              <div class="comparison-note">
-                <span class="comp-euler"><strong>Euler:</strong> simplest but least accurate</span>
-                <span class="comp-heun"><strong>Heun:</strong> better accuracy</span>
-                <span class="comp-rk4"><strong>RK4:</strong> most accurate and recommended</span>
-              </div>
-            </div>
-          </details>
         </div>
 
         <!-- Stability Warning -->
         <div id="stabilityWarn">⚠ Large step size — method may be unstable or inaccurate.</div>
 
-        <!-- Math Explanation -->
-        <div class="math-panel" id="mathPanel">
-          <span style="color:#666;font-size:9px;text-transform:uppercase;letter-spacing:.1em">Update Rule</span>
-          <span class="formula">y<sub>n+1</sub> = y<sub>n</sub> + h · f(x<sub>n</sub>, y<sub>n</sub>)</span>
-          Each step follows the tangent line at the current point. Smaller h → better accuracy.
-          <div class="insight" id="mathInsight">Run the simulation to see accuracy feedback.</div>
-        </div>
+
 
         <!-- Equation Presets -->
         <div>
@@ -1040,6 +1301,62 @@
         </div>
       </main>
 
+    </div>
+  </section>
+
+  <!-- ══ METHOD EXPLAINER BAND ══════════════════════════════════════════ -->
+  <section id="method-explainer">
+    <div class="me-inner">
+      <div class="me-heading-row">
+        <div class="me-tag">Numerical Methods</div>
+        <h2 class="me-title">How the Methods Work</h2>
+        <p class="me-subtitle">Understanding the three approximation strategies used in this simulator</p>
+      </div>
+
+      <div class="me-cards">
+
+        <div class="me-card me-card--euler">
+          <div class="me-card-icon">01</div>
+          <div class="me-card-label" style="color:#ffffff">Euler Method</div>
+          <div class="me-card-name">Basic / First-Order</div>
+          <p class="me-card-desc">This method moves step by step using the slope at the current point. It is simple and
+            fast, but not very accurate because it only looks at one direction.</p>
+          <div class="me-card-badge me-badge--euler">Simplest · Least Accurate</div>
+        </div>
+
+        <div class="me-card me-card--heun">
+          <div class="me-card-icon">02</div>
+          <div class="me-card-label" style="color:#3b82f6">Heun Method</div>
+          <div class="me-card-name">Improved Euler</div>
+          <p class="me-card-desc">This method improves Euler by checking the slope at the start and the end of the step,
+            then taking the average. This makes it more accurate than Euler.</p>
+          <div class="me-card-badge me-badge--heun">Two Slopes · Better Accuracy</div>
+        </div>
+
+        <div class="me-card me-card--rk4">
+          <div class="me-card-icon">04</div>
+          <div class="me-card-label" style="color:#a78bfa">Runge-Kutta 4</div>
+          <div class="me-card-name">RK4 — Gold Standard</div>
+          <p class="me-card-desc">This method calculates the slope four times in each step and combines them with a
+            weighted average. It is much more accurate and widely used in engineering and physics.</p>
+          <div class="me-card-badge me-badge--rk4">Four Slopes · Most Accurate ★</div>
+        </div>
+
+      </div>
+
+      <!-- Update Rule + Dynamic Insight -->
+      <div class="me-formula-row">
+        <div class="me-formula-box">
+          <div class="me-formula-label">Update Rule</div>
+          <div class="me-formula-main">y<sub>n+1</sub> = y<sub>n</sub> + h · f(x<sub>n</sub>, y<sub>n</sub>)</div>
+          <div class="me-formula-note">Each step follows the tangent line at the current point. Smaller h → better
+            accuracy.</div>
+        </div>
+        <div class="me-insight-box" id="mathPanel">
+          <div class="me-insight-label">Live Accuracy Insight</div>
+          <div class="insight" id="mathInsight">Run the simulation to see accuracy feedback.</div>
+        </div>
+      </div>
     </div>
   </section>
 
