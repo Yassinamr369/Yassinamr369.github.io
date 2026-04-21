@@ -1493,8 +1493,14 @@
     const target = tbody.querySelector(`tr[data-row="${idx}"]`);
     if (target) {
       target.classList.add('active-row');
-      // smooth scroll into view within the wrapper
-      target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      // scroll only the wrapper box, not the entire browser window
+      const wrapper = target.closest('.table-wrapper');
+      if (wrapper) {
+        wrapper.scrollTo({
+          top: target.offsetTop - wrapper.clientHeight/2 + target.clientHeight/2,
+          behavior: 'smooth'
+        });
+      }
     }
   }
 
